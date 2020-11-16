@@ -1,4 +1,6 @@
-# nrdpd-daemon
+nrdpd-daemon
+============
+
 Nagios Remote Data Processing Daemon
 
 Primary documentation is availabe at `docs`_.
