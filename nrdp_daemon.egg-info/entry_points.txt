@@ -1,0 +1,3 @@
+[scripts]
+nrdpd = nrdpdlib.main:start
+
