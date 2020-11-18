@@ -1,25 +1,22 @@
-Metadata-Version: 2.1
+Metadata-Version: 1.2
 Name: nrdp-daemon
 Version: 1.0.1
 Summary: Nagios Remote Data Processing Daemon
-Home-page: UNKNOWN
+Home-page: https://github.com/HopliteInd/nrdpd-daemon
 Author: Hoplite Industries, Inc.
-Author-email: support@hopliteindustries.com
-License: UNKNOWN
-Project-URL: Bug Reports, https://github.com/pypa/sampleproject/issues
-Project-URL: Funding, https://donate.pypi.org
-Project-URL: Say Thanks!, http://saythanks.io/to/example
-Project-URL: Source, https://github.com/pypa/sampleproject/
+Maintainer: Shawn Michael
+Maintainer-email: smichael@hopliteindustries.com
+License: Apache 2.0
 Description: UNKNOWN
 Keywords: nrdp,nagios,passive
 Platform: UNKNOWN
 Classifier: Development Status :: 3 - Alpha
+Classifier: Environment :: No Input/Output (Daemon)
 Classifier: Intended Audience :: System Administrators
-Classifier: License :: Proprietary :: Apache 2.0
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3 :: Only
-Requires-Python: >=3.6
-Description-Content-Type: text/markdown
+Classifier: Topic :: System :: Monitoring

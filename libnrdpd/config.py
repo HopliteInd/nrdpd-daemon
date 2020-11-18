@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Create configuration object for nrdpd. """
+"""If writing your own wrapper around librndpd you should likely start here.
+The primary object to interact with is :class:`Config`.  From there you can
+use that configuration object to execute checks and submit the results.
+"""
 
 
 import configparser
+import glob
 import io
 import logging
+import os.path
+import re
 import shlex
 import typing
 import urllib.parse
@@ -29,17 +35,81 @@ from . import error
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
+class Check:
+    """Class describing an individual check.
+
+    Params:
+        name: Check name.  This is the name that is submitted to nagios and
+            must be in sync with the nagios config files.  This name is case
+            sensitive.
+    """
+
+    def __init__(self, name: str):
+        self._name = str(name)
+        self._timeout = 10.0
+        self._delay = 300
+        self._command = None
+
+    @property
+    def name(self):
+        """Name of the check (read only).
+
+        This value is the same as is in the nagios config file.  It's case
+        sensitive and can only be set during object creation.
+        """
+
+        return self._name
+
+    @property
+    def timeout(self):
+        """How long to run execute the check for before going CRITICAL.
+
+        This value is the same as is in the nagios config file.  It's case
+        sensitive and can only be set during object creation.
+        """
+
+        return self._name
+
+    @timeout.setter
+    def timeout(self, value):
+        if isinstance(value, int):
+            tmp = float(value)
+        elif isinstance(value, float):
+            tmp = value
+        else:
+            raise error.ConfigError(
+                error.Err.TYPE_ERROR,
+                "timeout for %s must be a number" % (self._name),
+            )
+        if tmp <= 1.0:
+            raise error.ConfigError(
+                error.Err.VALUE_ERROR,
+                "timeout for %s must be greater than 1.0" % (self._name),
+            )
+
+        self._timeout = tmp
+
+
 class Config:
-    """Configuration class for nrdpd
+    """Configuration class for nrdpd.
 
     Params:
         cfgfile: Path to the nrdpd config.ini file.  The value passed in may
             be either a ``str`` or an open file like object derived from
             ``io.IOBase``.
 
+        confd (str or  None): Optional path to the conf.d directory.  Any
+            files matching the pattern ``*.ini`` within that directory will
+            be processed, possibly overriding existing values. The priority
+            on the files is that they are processed in lexical order, with
+            later files having the possibility to override earlier ones.
     """
 
-    def __init__(self, cfgfile: typing.Union[str, io.IOBase]):
+    def __init__(
+        self,
+        cfgfile: typing.Union[str, io.IOBase],
+        confd: typing.Optional[str] = None,
+    ):
         log = logging.getLogger("%s.__init__" % __name__)
         log.debug("start")
 
@@ -47,6 +117,9 @@ class Config:
         self._token = None  # Server authentication token
 
         self._cp = configparser.ConfigParser()
+        self._check_re = re.compile("^[-: a-zA-Z0-9]+")
+
+        self._checks = {}  # Dictionry of checks.  key = name, value = Check
 
         try:
             if isinstance(cfgfile, str):
@@ -59,6 +132,11 @@ class Config:
                     error.Err.TYPE_ERROR,
                     "Invalid cfgfile type: %s" % type(cfgfile),
                 )
+            if confd is not None:
+                if os.path.isdir(confd):
+                    extra = sorted(glob.glob(os.path.join(confd, "*.ini")))
+                    self._cp.read(extra)
+
         except FileNotFoundError as err:
             print(err.filename)
             raise error.ConfigError(
@@ -129,21 +207,25 @@ class Config:
                 "Required option [%s]->%s invalid type: %s"
                 % (section, option, err),
             )
+        return value
 
     def _get_configuration(self):
-        """Pull our configuration bits out of the config file"""
+        """Pull our configuration bits out of the config file."""
         log = logging.getLogger("%s._get_configuration" % __name__)
         log.debug("start")
 
         self._servers = self._get_req_opt("config", "servers", shlex.split)
-        self._servers = self._get_req_opt("config", "token")
+        self._token = self._get_req_opt("config", "token")
 
         # Validate values
         for server in self._servers:
             try:
                 obj = urllib.parse.urlparse(server)
                 if obj.scheme not in ["http", "https"]:
-                    raise ValueError("URL scheme must be 'http' or 'https'")
+                    raise ValueError(
+                        "URL scheme must be 'http' or 'https' not %s"
+                        % repr(obj.scheme)
+                    )
             except ValueError as err:
                 raise error.ConfigError(
                     error.Err.TYPE_ERROR,
@@ -151,14 +233,40 @@ class Config:
                 ) from None
 
     def _get_checks(self):
-        pass
+        """Loop through the configuration looking for service checks."""
+        log = logging.getLogger("%s._get_checks" % __name__)
+        log.debug("start")
+        for section in self._cp:
+            if not section.startswith("check:"):
+                log.debug("Section [%s] not a check", section)
+                continue
+
+            name = section.split(":", 1)[1]
+            if not self._check_re.match(name):
+                raise error.ConfigError(
+                    error.Err.VALUE_ERROR,
+                    "check [%s] has an inavlid name" % (section),
+                ) from None
+
+            self._checks[name] = Check(name)
+
+    @property
+    def checks(self):
+        """Dictionary of :class:`Check` objects describing checks to be run.
+
+        Using this property will create a duplicate dictionary that
+        you can modify without affecting the internal data structres within
+        this class.  The individual :class:`Check` objects can be modified
+        within their contstaints.
+        """
+        return {x: self._checks[x] for x in self._checks}
 
     @property
     def servers(self):
-        """(List of str) Urls for servers to publish NRDP results to"""
+        """(List of str) Urls for servers to publish NRDP results to."""
         return [str(x) for x in self._servers]
 
     @property
     def token(self):
-        """(str) Server authentication token"""
+        """(str) Server authentication token."""
         return str(self._token)

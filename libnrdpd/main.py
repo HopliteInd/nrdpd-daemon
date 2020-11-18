@@ -13,9 +13,8 @@
 # limitations under the License.
 
 
-""" Starting point for the package.
+"""Entry point for the nrdpd program."""
 
-"""
 import argparse
 import base64
 import logging
@@ -35,15 +34,24 @@ SLIM_SHADY = os.path.basename(sys.argv[0])
 
 
 def parse_args():
-    """ Parse command line arguments """
+    """Parse command line arguments."""
     random_session = base64.urlsafe_b64encode(os.urandom(9)).decode("utf-8")
     session_id = os.getenv("SESSION_ID", random_session)
 
+    # Default config.ini path
     winpath = os.path.join(
         os.path.dirname(os.path.realpath(sys.argv[0])), "config.ini"
     )
     posixpath = "/etc/nrdpd/config.ini"
     cfgpath = winpath if platform.system() == "Windows" else posixpath
+
+    # Default path to conf.d directory
+
+    winpath = os.path.join(
+        os.path.dirname(os.path.realpath(sys.argv[0])), "conf.d"
+    )
+    posixpath = "/etc/nrdpd/conf.d"
+    confd = winpath if platform.system() == "Windows" else posixpath
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -85,6 +93,13 @@ def parse_args():
         default=cfgpath,
         help="Configuration file",
     )
+    parser.add_argument(
+        "-C",
+        "--conf.d",
+        dest="confd",
+        default=confd,
+        help="Path to conf.d directory for overrides",
+    )
     opts = parser.parse_args()
     if opts.debug_log:
         opts.debug = True
@@ -93,16 +108,16 @@ def parse_args():
 
 
 def main(opts):
-    """Default entry point"""
+    """Core running logic for the program."""
     log = logging.getLogger("%s.main" % __name__)
     log.debug("Start")
 
-    cfg = config.Config(opts.config)
+    cfg = config.Config(opts.config, opts.confd)
     print(cfg.servers)
 
 
 def start():
-    """Entry point for pybuild process"""
+    """Entry point for pybuild process."""
     opts = parse_args()
     log = logging.getLogger(SLIM_SHADY)
     log.addHandler(logging.NullHandler())
@@ -127,7 +142,7 @@ def start():
             format="%(asctime)s %(name)s: %(message)s",
         )
 
-    if platform.system == "Windows":
+    if platform.system() == "Windows":
         loghandler = logging.handlers.NTEventLogHandler(SLIM_SHADY)
         loghandler.setLevel(logging.ERROR)
         formatter = logging.Formatter(
@@ -164,5 +179,4 @@ def start():
 # vim: filetype=python:
 
 if __name__ == "__main__":
-
     start()

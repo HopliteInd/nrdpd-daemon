@@ -1,11 +1,6 @@
 libnrdpd.config
 ===============
 
-Core library for the nrdpd daemon.
-
-Modules
--------
-
 .. toctree::
     :maxdepth: 1
 

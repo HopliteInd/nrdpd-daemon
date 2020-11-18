@@ -27,16 +27,19 @@ class Err(enum.Enum):
     # -------------------------------------------
 
     NO_CONNECT = enum.auto()
-    """ Error establishing network connection """
+    """Error establishing network connection."""
 
     # Configuration Errors
     # -------------------------------------------
 
     TYPE_ERROR = enum.auto()
-    """ Parameter type is invalid for the function"""
+    """Parameter type is invalid for the function."""
+
+    VALUE_ERROR = enum.auto()
+    """The value is invalid for the use case."""
 
     REQUIRED_MISSING = enum.auto()
-    """ A required option is missing """
+    """A required option is missing."""
 
     # General Errors
     # -------------------------------------------
@@ -65,13 +68,14 @@ class NrdpdError(Exception):
     """
 
     def __init__(self, err: Err, message: str):
+        super().__init__()
         if not isinstance(err, Err):
             raise ValueError("err is not a member of %s.Err" % (__name__))
         self.err = err
         self.message = message
 
     def __str__(self):
-        return ("[%s] %s" % self.err.name, self.message)
+        return "[%s] %s" % (self.err.name, self.message)
 
     def __repr__(self):
         return "%s.%s(Err.%s, %s)" % (

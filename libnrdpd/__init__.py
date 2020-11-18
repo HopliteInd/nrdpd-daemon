@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Test """
+"""Library and daemon for managing NRDP submissions."""
 
 from . import config
 from . import error
