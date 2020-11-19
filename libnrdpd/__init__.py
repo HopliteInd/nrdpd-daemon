@@ -16,6 +16,7 @@
 
 from . import config
 from . import error
+from . import util
 
 
-__all__ = ["config", "error"]
+__all__ = ["config", "error", "util"]

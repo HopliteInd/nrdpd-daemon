@@ -3,15 +3,13 @@ libnrdpd
 
 Core library for the nrdpd daemon.
 
-Modules
--------
-
 .. toctree::
     :maxdepth: 1
 
     libnrdpd.config
     libnrdpd.error
     libnrdpd.main
+    libnrdpd.util
 
 .. automodule:: libnrdpd
    :members:

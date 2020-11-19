@@ -10,7 +10,7 @@ you can integrate with.
 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Components:
 
    nrdpd

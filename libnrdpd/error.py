@@ -59,30 +59,30 @@ class NrdpdError(Exception):
 
     Parameters:
         err: Value from  the enum :class:`Err`
-        message: Error message
+        msg: Error message
 
     Attributes:
         err: Value from the enum :class:`Err`
-        message: Error message
+        msg: Error message
 
     """
 
-    def __init__(self, err: Err, message: str):
+    def __init__(self, err: Err, msg: str):
         super().__init__()
         if not isinstance(err, Err):
             raise ValueError("err is not a member of %s.Err" % (__name__))
         self.err = err
-        self.message = message
+        self.msg = msg
 
     def __str__(self):
-        return "[%s] %s" % (self.err.name, self.message)
+        return "[%s] %s" % (self.err.name, self.msg)
 
     def __repr__(self):
         return "%s.%s(Err.%s, %s)" % (
             __name__,
             self.__class__.__name__,
             self.err.name,
-            repr(self.message),
+            repr(self.msg),
         )
 
 

@@ -21,15 +21,18 @@ use that configuration object to execute checks and submit the results.
 import configparser
 import glob
 import io
+import ipaddress
 import logging
 import os.path
 import re
 import shlex
+import socket
 import typing
 import urllib.parse
 
 # Local imports
 from . import error
+from . import util
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -42,13 +45,31 @@ class Check:
         name: Check name.  This is the name that is submitted to nagios and
             must be in sync with the nagios config files.  This name is case
             sensitive.
+        command (list of str): The command to execute.  Each element is
+            evaluated for variable substitution.
+        timeout: How long in seconds to allow a check to run before terminating
+            it and reporting CRITICAL due to timeout.
+        frequency: The check should run every ``frequency`` seconds.
     """
 
-    def __init__(self, name: str):
+    def __init__(
+        self,
+        name: str,
+        command: list,
+        timeout: float,
+        frequency: int,
+    ):
         self._name = str(name)
-        self._timeout = 10.0
-        self._delay = 300
-        self._command = None
+
+        try:
+            self._timeout = util.min_float_val(timeout, 1.0, "timeout")
+            self._frequency = util.min_float_val(frequency, 10.0, "frequency")
+        except error.ConfigError as err:
+            raise error.ConfigError(
+                error.Err.VALUE_ERROR,
+                "[check:%s] %s" % (self._name, err.msg),
+            )
+        self._command = command
 
     @property
     def name(self):
@@ -64,30 +85,21 @@ class Check:
     def timeout(self):
         """How long to run execute the check for before going CRITICAL.
 
-        This value is the same as is in the nagios config file.  It's case
-        sensitive and can only be set during object creation.
+        Once this time value has been hit, the individual check process
+        is terminated and CRITICAL is reported back to nagios.
         """
 
-        return self._name
+        return self._timeout
 
-    @timeout.setter
-    def timeout(self, value):
-        if isinstance(value, int):
-            tmp = float(value)
-        elif isinstance(value, float):
-            tmp = value
-        else:
-            raise error.ConfigError(
-                error.Err.TYPE_ERROR,
-                "timeout for %s must be a number" % (self._name),
-            )
-        if tmp <= 1.0:
-            raise error.ConfigError(
-                error.Err.VALUE_ERROR,
-                "timeout for %s must be greater than 1.0" % (self._name),
-            )
+    @property
+    def frequency(self):
+        """The check should run every X seconds."""
+        return self._frequency
 
-        self._timeout = tmp
+    @property
+    def command(self):
+        """The check should run every X seconds."""
+        return self._frequency
 
 
 class Config:
@@ -115,6 +127,9 @@ class Config:
 
         self._servers = []  # List of servers to publish to
         self._token = None  # Server authentication token
+        # Default hostname comes from socket
+        self._hostname = socket.gethostname().split(".")[0]
+        self._ip = util.getip()
 
         self._cp = configparser.ConfigParser()
         self._check_re = re.compile("^[-: a-zA-Z0-9]+")
@@ -216,6 +231,24 @@ class Config:
 
         self._servers = self._get_req_opt("config", "servers", shlex.split)
         self._token = self._get_req_opt("config", "token")
+        # Depends on the upper to to validate that "[config]" exists
+        hostname = self._cp["config"].get("hostname")
+        self._hostname = hostname if hostname else self._hostname
+
+        ip = self._cp["config"].get("ip")  # pylint: disable=C0103
+        if ip:
+            try:
+                test = ipaddress.ip_address(ip)
+            except ValueError as err:
+                raise error.ConfigError(
+                    error.Err.TYPE_ERROR,
+                    "[config]->ip invalid IP: %s: %s" % (ip, err),
+                ) from None
+
+            if test.version == 4:
+                self._ip = util.IP(str(test), None)
+            else:
+                self._ip = util.IP(None, test.compressed)
 
         # Validate values
         for server in self._servers:
@@ -248,7 +281,11 @@ class Config:
                     "check [%s] has an inavlid name" % (section),
                 ) from None
 
-            self._checks[name] = Check(name)
+            timeout = self._cp[section].get("timeout", 10.0)
+            frequency = self._cp[section].get("frequency", 60.0)
+            command = self._get_req_opt(section, "command", shlex.split)
+
+            self._checks[name] = Check(name, command, timeout, frequency)
 
     @property
     def checks(self):
@@ -270,3 +307,17 @@ class Config:
     def token(self):
         """(str) Server authentication token."""
         return str(self._token)
+
+    @property
+    def host(self):
+        """(str) Host name presented to nagios.
+
+        By default this will be the short name.   If you want a fully qualified
+        domain name add it to the config file.
+        """
+        return str(self._hostname)
+
+    @property
+    def ip(self):
+        """(:class:`util.IP`) IP address of the machine"""
+        return self._ip
