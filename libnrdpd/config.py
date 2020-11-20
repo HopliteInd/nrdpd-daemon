@@ -164,7 +164,6 @@ class Config:  # pylint: disable=R0902
                     self._cp.read(extra)
 
         except FileNotFoundError as err:
-            print(err.filename)
             raise error.ConfigError(
                 error.Err.NOT_FOUND, "Config file not found: %s" % err.filename
             )

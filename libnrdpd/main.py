@@ -122,51 +122,62 @@ def main(opts):
 def start():
     """Entry point for pybuild process."""
     opts = parse_args()
-    log = logging.getLogger(SLIM_SHADY)
-    log.addHandler(logging.NullHandler())
 
+    if platform.system() == "Windows":
+        syslog = logging.handlers.NTEventLogHandler(SLIM_SHADY)
+        syslog.setLevel(logging.ERROR)
+        formatter = logging.Formatter(
+            "%(name)s[%(process)d]: {session} %(message)s".format(
+                session=opts.session_id
+            )
+        )
+        syslog.setFormatter(formatter)
+    else:
+        # Set up a syslog output stream
+        syslog = logging.handlers.SysLogHandler("/dev/log")
+        syslog.setLevel(logging.ERROR)
+        formatter = logging.Formatter(
+            "{prog}[%(process)d]: %(name)s {session} %(message)s".format(
+                prog=SLIM_SHADY,
+                session=opts.session_id
+            )
+        )
+        syslog.setFormatter(formatter)
+
+    stderr = logging.StreamHandler(stream=sys.stderr)
     if opts.debug:
         if opts.debug_log:
+            stderr.setLevel(logging.DEBUG)
             logging.basicConfig(
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
                 filename=opts.debug_log,
                 filemode="w",
+                handlers=[syslog, stderr],
             )
         else:
             logging.basicConfig(
                 level=logging.DEBUG,
                 format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+                handlers=[syslog, stderr],
             )
 
     elif opts.verbose:
         logging.basicConfig(
-            level=logging.DEBUG,
+            level=logging.INFO,
             format="%(asctime)s %(name)s: %(message)s",
+            handlers=[syslog, stderr],
         )
-
-    if platform.system() == "Windows":
-        loghandler = logging.handlers.NTEventLogHandler(SLIM_SHADY)
-        loghandler.setLevel(logging.ERROR)
-        formatter = logging.Formatter(
-            "%(name)s[%(process)d]: {session} %(message)s".format(
-                session=opts.session_id
-            )
-        )
-        loghandler.setFormatter(formatter)
-        log.addHandler(loghandler)
 
     else:
-        # Set up a syslog output stream
-        loghandler = logging.handlers.SysLogHandler("/dev/log")
-        loghandler.setLevel(logging.ERROR)
-        formatter = logging.Formatter(
-            "%(name)s[%(process)d]: {session} %(message)s".format(
-                session=opts.session_id
-            )
+        logging.basicConfig(
+            level=logging.ERROR,
+            format="%(asctime)s %(name)s: %(message)s",
+            handlers=[syslog],
         )
-        loghandler.setFormatter(formatter)
-        log.addHandler(loghandler)
+
+    log = logging.getLogger(SLIM_SHADY)
+    log.setLevel(logging.ERROR)
 
     try:
         log.error("Startup")

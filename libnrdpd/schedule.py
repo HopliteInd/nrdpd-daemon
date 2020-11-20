@@ -33,15 +33,22 @@ class Schedule:
     Parameters:
         cfg (:class:`libnrdpd.config.Config`): Config object
 
+    Raises:
+        ValueError: Raised when incoming ``cfg`` is of the wrong type.
+
     """
 
     def __init__(self, cfg: config.Config):
+        if not isinstance(cfg, config.Config):
+            raise ValueError(
+                "cfg is `%s` expected config.Config" % (type(cfg))
+            )
         self._cfg = cfg
         self._tasks = {}
         self._running = {}
         self._queue = []
 
-        for check in self._cfg.checks:
+        for check in self._cfg.checks.values():
             self._queue.append(tasklib.Task(check))
 
     def sort(self):
@@ -63,7 +70,7 @@ class Schedule:
             # Check the status of running children
             # Can't iterate over a dictionary that I'm modifying within
             # the iteration.
-            for name in self._running.keys():  # pylint: disable=C0201
+            for name in list(self._running.keys()):  # pylint: disable=C0201
                 task = self._running[name]
 
                 if task.complete:

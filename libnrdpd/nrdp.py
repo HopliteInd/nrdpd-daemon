@@ -43,7 +43,7 @@ def submit(cfg: config.Config, task: tasklib.Task):
             task is passed in.
     """
     log = logging.getLogger("%s.Nrdp.submit" % __name__)
-    if task.timeout:
+    if task.expired:
         # Manufacture fake CRITICAL submission results
         code = error.Status.CRITICAL
         message = "TIMEOUT: Plugin timed out after %0.2f seconds" % (
@@ -76,6 +76,7 @@ def submit(cfg: config.Config, task: tasklib.Task):
             # Normal processing
             try:
                 code = error.Status(task.status)
+                message = task.stdout
             except ValueError:
                 code = error.Status.CRITICAL
                 message = "Check exited with unknown code: %d" % (task.status)
@@ -84,13 +85,13 @@ def submit(cfg: config.Config, task: tasklib.Task):
         "checkresults": [
             {
                 "checkresult": {"type": "host"},
-                "hostname": task.check.host,
+                "hostname": cfg.host,
                 "state": "0",
                 "output": "Host alive enough to send this",
             },
             {
                 "checkresult": {"type": "service"},
-                "hostname": task.check.host,
+                "hostname": cfg.host,
                 "servicename": task.check.name,
                 "state": str(code),
                 "output": message,

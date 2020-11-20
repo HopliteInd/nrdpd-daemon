@@ -74,7 +74,10 @@ def min_float_val(value: float, minval: float, name: str):
     """
     log = logging.getLogger("%s.min_float_val" % __name__)
     log.debug(
-        "start: value=%0.2f minval=%0.2f name=%s", value, minval, repr(name)
+        "start: value=%s minval=%s name=%s",
+        repr(value),
+        repr(minval),
+        repr(name),
     )
     try:
         retval = float(value)
