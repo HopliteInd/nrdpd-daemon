@@ -107,12 +107,12 @@ class Check:
         """list of str: A 'new' list of the command to run.
 
         Any template variables have not been filled out yet.  See
-        :class:`libnrdpd.core.Task` for handling of templates.
+        :class:`libnrdpd.task.Task` for handling of templates.
         """
         return self._command
 
 
-class Config:
+class Config:  # pylint: disable=R0902
     """Configuration class for nrdpd.
 
     Parameters:
@@ -139,6 +139,7 @@ class Config:
         self._token = None  # Server authentication token
         # Default hostname comes from socket
         self._hostname = socket.gethostname().split(".")[0]
+        self._cacert = None
         self._ip = util.getip()
 
         self._cp = configparser.ConfigParser()
@@ -241,9 +242,14 @@ class Config:
 
         self._servers = self._get_req_opt("config", "servers", shlex.split)
         self._token = self._get_req_opt("config", "token")
-        # Depends on the upper to to validate that "[config]" exists
+
+        # Depends on the upper to to validate that "[config]" exists.
+        # Ternary operator handles "" as well as None when evaluating
+        # True.
         hostname = self._cp["config"].get("hostname")
         self._hostname = hostname if hostname else self._hostname
+        cacert = self._cp["config"].get("cacert")
+        self._cacert = cacert if cacert else None
 
         ip = self._cp["config"].get("ip")  # pylint: disable=C0103
         if ip:
@@ -331,3 +337,8 @@ class Config:
     def ip(self):  # pylint: disable=C0103
         """:class:`util.IP`: IP address of the machine"""
         return self._ip
+
+    @property
+    def cacert(self):  # pylint: disable=C0103
+        """str or None: CA certificate file if specified in the config"""
+        return self._cacert

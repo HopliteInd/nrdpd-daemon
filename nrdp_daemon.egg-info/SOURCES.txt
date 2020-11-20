@@ -15,13 +15,19 @@ docs/source/index.rst
 docs/source/libnrdpd.config.rst
 docs/source/libnrdpd.error.rst
 docs/source/libnrdpd.main.rst
+docs/source/libnrdpd.nrdp.rst
 docs/source/libnrdpd.rst
+docs/source/libnrdpd.schedule.rst
+docs/source/libnrdpd.task.rst
 docs/source/libnrdpd.util.rst
 docs/source/nrdpd.rst
 libnrdpd/__init__.py
 libnrdpd/config.py
 libnrdpd/error.py
 libnrdpd/main.py
+libnrdpd/nrdp.py
+libnrdpd/schedule.py
+libnrdpd/task.py
 libnrdpd/util.py
 nrdp_daemon.egg-info/PKG-INFO
 nrdp_daemon.egg-info/SOURCES.txt
@@ -29,6 +35,7 @@ nrdp_daemon.egg-info/dependency_links.txt
 nrdp_daemon.egg-info/top_level.txt
 nrdp_daemon.egg-info/zip-safe
 tests/test_config.py
+tests/test_task.py
 tests/test_util.py
 tests/config/config-bad-url.ini
 tests/config/config-mvp.ini

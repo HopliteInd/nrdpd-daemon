@@ -43,7 +43,7 @@ def test_IP_v6_invalid():
 
 def test_getip():
     ip = libnrdpd.util.getip()
-    if (ip.v4 == "127.0.0.1" and ip.v6 == "::1"):
+    if ip.v4 == "127.0.0.1" and ip.v6 == "::1":
         raise ValueError("Both ipv4 and ipv6 are localhost")
 
 

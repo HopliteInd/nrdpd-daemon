@@ -28,6 +28,7 @@ import traceback
 
 # Local imports
 from . import config
+from . import schedule
 
 # My name is
 SLIM_SHADY = os.path.basename(sys.argv[0])
@@ -113,7 +114,9 @@ def main(opts):
     log.debug("Start")
 
     cfg = config.Config(opts.config, opts.confd)
-    print(cfg.servers)
+    sched = schedule.Schedule(cfg)
+
+    sched.loop()
 
 
 def start():

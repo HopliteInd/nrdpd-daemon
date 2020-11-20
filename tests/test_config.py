@@ -41,6 +41,7 @@ def test_config_valid_overrides():
             assert check.timeout == 15.0
             assert check.frequency == 120.0
 
+
 # Test loading valid minimally viable product config file.
 def test_config_valid_mvp():
     cfg = libnrdpd.config.Config(
@@ -53,7 +54,6 @@ def test_config_valid_mvp():
     for name, check in cfg.checks.items():
         assert check.timeout == DEF_TIMEOUT
         assert check.frequency == DEF_FREQUENCY
-
 
 
 def test_config_bad_url():
