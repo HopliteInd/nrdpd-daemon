@@ -1,10 +1,7 @@
 libnrdpd.main
 =============
 
-Core library for the nrdpd daemon.
-
-Modules
--------
+Core library for the running of the nrdpd daemon.
 
 .. toctree::
     :maxdepth: 1

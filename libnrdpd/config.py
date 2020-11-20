@@ -41,7 +41,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 class Check:
     """Class describing an individual check.
 
-    Params:
+    Parameters:
         name: Check name.  This is the name that is submitted to nagios and
             must be in sync with the nagios config files.  This name is case
             sensitive.
@@ -49,7 +49,13 @@ class Check:
             evaluated for variable substitution.
         timeout: How long in seconds to allow a check to run before terminating
             it and reporting CRITICAL due to timeout.
-        frequency: The check should run every ``frequency`` seconds.
+        frequency: How often in seconds the check should run.
+
+    Raises:
+        :class:`error.ConfigError`:
+            Raised if timeout or frequency are not able to be treated as
+            float values.  ``.err`` attribute is set to
+            :class:`VALUE_ERROR <error.Err>`
     """
 
     def __init__(
@@ -73,7 +79,7 @@ class Check:
 
     @property
     def name(self):
-        """Name of the check (read only).
+        """str: Name of the check (read only).
 
         This value is the same as is in the nagios config file.  It's case
         sensitive and can only be set during object creation.
@@ -83,7 +89,7 @@ class Check:
 
     @property
     def timeout(self):
-        """How long to run execute the check for before going CRITICAL.
+        """float: How long to run execute the check for before going CRITICAL.
 
         Once this time value has been hit, the individual check process
         is terminated and CRITICAL is reported back to nagios.
@@ -93,19 +99,23 @@ class Check:
 
     @property
     def frequency(self):
-        """The check should run every X seconds."""
+        """float: The check should run every X seconds."""
         return self._frequency
 
     @property
     def command(self):
-        """The check should run every X seconds."""
-        return self._frequency
+        """list of str: A 'new' list of the command to run.
+
+        Any template variables have not been filled out yet.  See
+        :class:`libnrdpd.core.Task` for handling of templates.
+        """
+        return self._command
 
 
 class Config:
     """Configuration class for nrdpd.
 
-    Params:
+    Parameters:
         cfgfile: Path to the nrdpd config.ini file.  The value passed in may
             be either a ``str`` or an open file like object derived from
             ``io.IOBase``.
@@ -289,7 +299,7 @@ class Config:
 
     @property
     def checks(self):
-        """Dictionary of :class:`Check` objects describing checks to be run.
+        """dict of str, :class:`Check`: Dictionary describing checks to be run.
 
         Using this property will create a duplicate dictionary that
         you can modify without affecting the internal data structres within
@@ -300,17 +310,17 @@ class Config:
 
     @property
     def servers(self):
-        """(List of str) Urls for servers to publish NRDP results to."""
+        """list of str: Urls for servers to publish NRDP results to."""
         return [str(x) for x in self._servers]
 
     @property
     def token(self):
-        """(str) Server authentication token."""
+        """str: Server authentication token."""
         return str(self._token)
 
     @property
     def host(self):
-        """(str) Host name presented to nagios.
+        """str: Host name presented to nagios.
 
         By default this will be the short name.   If you want a fully qualified
         domain name add it to the config file.
@@ -318,6 +328,6 @@ class Config:
         return str(self._hostname)
 
     @property
-    def ip(self):
-        """(:class:`util.IP`) IP address of the machine"""
+    def ip(self):  # pylint: disable=C0103
+        """:class:`util.IP`: IP address of the machine"""
         return self._ip

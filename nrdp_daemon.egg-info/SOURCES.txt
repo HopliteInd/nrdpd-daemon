@@ -28,7 +28,6 @@ nrdp_daemon.egg-info/SOURCES.txt
 nrdp_daemon.egg-info/dependency_links.txt
 nrdp_daemon.egg-info/top_level.txt
 nrdp_daemon.egg-info/zip-safe
-tests/.test_util.py.swp
 tests/test_config.py
 tests/test_util.py
 tests/config/config-bad-url.ini

@@ -12,8 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""" Exceptions and error codes for nrdpd """
+"""Exceptions and error codes for nrdpd."""
+
 import enum
+import sys
+
+
+class Status(enum.Enum):
+    """Nagios statuses."""
+    OK = 0
+    WARN = 1
+    CRITICAL = 2
+    UNKNOWN = 3
 
 
 class Err(enum.Enum):
@@ -92,3 +102,59 @@ class NetworkError(NrdpdError):
 
 class ConfigError(NrdpdError):
     """Raised on errors related to the configuration file"""
+
+
+class NagiosStatus(Exception):
+    """Nagios Check API related exception.
+
+    Parameters:
+        code (:class:`Status`): Valid Nagios exit code.  ``int`` values also
+            work.  Values must be in the range 0-3.
+        error: Error message to give to nagios.
+
+    Raises:
+        ValueError
+            Raised when code passed in is not a valid :class:`Status` value.
+
+    """
+    def __init__(self, code: Status, error: str):
+        super().__init__()
+        self._code = Status(code)
+        self._error = error
+
+    @property
+    def code(self):
+        return self._code
+
+    @property
+    def error(self):
+        return self._error
+
+    def __str__(self):
+        return "%s: %s" % (Status(self._code).name, self._error)
+
+    def __repr__(self):
+        return "%s.NagiosStatus(%d, %s)" % (__name, self._code, repr(self._error))
+
+class Ok(NagiosStatus):
+    """Nagios status for a successful run.
+
+    As an exception this is likely not useful, but it's here for completeness.
+    """
+    def __init__(self, error: str):
+        super().__init__(Status.OK, error)
+
+class Warn(NagiosStatus):
+    """Indicating a check is in a WARNING status."""
+    def __init__(self, error: str):
+        super().__init__(Status.WARN, error)
+
+class Critical(NagiosStatus):
+    """Indicating a check is in a CRITICAL status."""
+    def __init__(self, error: str):
+        super().__init__(Status.CRITICAL, error)
+
+class Unknown(NagiosStatus):
+    """Indicating a check is in a UNKNOWN status."""
+    def __init__(self, error):
+        super().__init__(Status.UNKNOWN, error)

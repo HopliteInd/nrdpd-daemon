@@ -7,6 +7,7 @@ Core library for the nrdpd daemon.
     :maxdepth: 1
 
     libnrdpd.config
+    libnrdpd.core
     libnrdpd.error
     libnrdpd.main
     libnrdpd.util
