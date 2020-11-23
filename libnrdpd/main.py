@@ -87,6 +87,14 @@ def parse_args():
         default=session_id,
         help="Specify a session id for syslog logging",
     )
+    if platofrm.system() != "Windows":
+        parser.add_argument(
+            "-p",
+            "--pid-file",
+            dest="pidfile",
+            default="/var/run/nrdpd.pid"
+            help="Pid file location [Default: %(default)s]",
+        )
     parser.add_argument(
         "-c",
         "--config",
@@ -105,6 +113,9 @@ def parse_args():
     if opts.debug_log:
         opts.debug = True
 
+    # Make sure it exists for testing later.
+    if platform.system() == "Windows":
+        opts.pidfile = None
     return opts
 
 
@@ -112,6 +123,14 @@ def main(opts):
     """Core running logic for the program."""
     log = logging.getLogger("%s.main" % __name__)
     log.debug("Start")
+
+    if opts.pidfile:
+        try:
+            with open(opts.pidfile, "w") as pidfile:
+                pidfile.write(str(os.getpid())
+        except OSError as err:
+            log.error("Unable to create pid file: %s", err)
+            sys.exit(5)
 
     cfg = config.Config(opts.config, opts.confd)
     sched = schedule.Schedule(cfg)
