@@ -92,14 +92,14 @@ def parse_args():
         "--config",
         dest="config",
         default=cfgpath,
-        help="Configuration file",
+        help="Configuration file [Default: %(default)s]",
     )
     parser.add_argument(
         "-C",
         "--conf.d",
         dest="confd",
         default=confd,
-        help="Path to conf.d directory for overrides",
+        help="Path to conf.d directory for overrides. [Default: %(default)s]",
     )
     opts = parser.parse_args()
     if opts.debug_log:
@@ -138,8 +138,7 @@ def start():
         syslog.setLevel(logging.ERROR)
         formatter = logging.Formatter(
             "{prog}[%(process)d]: %(name)s {session} %(message)s".format(
-                prog=SLIM_SHADY,
-                session=opts.session_id
+                prog=SLIM_SHADY, session=opts.session_id
             )
         )
         syslog.setFormatter(formatter)
