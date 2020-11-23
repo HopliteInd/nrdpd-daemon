@@ -92,7 +92,7 @@ def parse_args():
             "-p",
             "--pid-file",
             dest="pidfile",
-            default="/var/run/nrdpd.pid"
+            default="/var/run/nrdpd.pid",
             help="Pid file location [Default: %(default)s]",
         )
     parser.add_argument(
@@ -127,7 +127,7 @@ def main(opts):
     if opts.pidfile:
         try:
             with open(opts.pidfile, "w") as pidfile:
-                pidfile.write(str(os.getpid())
+                pidfile.write(str(os.getpid()))
         except OSError as err:
             log.error("Unable to create pid file: %s", err)
             sys.exit(5)

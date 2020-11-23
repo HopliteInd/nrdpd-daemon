@@ -120,6 +120,14 @@
         <span class="n">default</span><span class="o">=</span><span class="n">session_id</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Specify a session id for syslog logging&quot;</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="k">if</span> <span class="n">platofrm</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">!=</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+            <span class="s2">&quot;-p&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;--pid-file&quot;</span><span class="p">,</span>
+            <span class="n">dest</span><span class="o">=</span><span class="s2">&quot;pidfile&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s2">&quot;/var/run/nrdpd.pid&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pid file location [Default: </span><span class="si">%(default)s</span><span class="s2">]&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
         <span class="s2">&quot;-c&quot;</span><span class="p">,</span>
         <span class="s2">&quot;--config&quot;</span><span class="p">,</span>
@@ -138,6 +146,9 @@
     <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">debug_log</span><span class="p">:</span>
         <span class="n">opts</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
 
+    <span class="c1"># Make sure it exists for testing later.</span>
+    <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Windows&quot;</span><span class="p">:</span>
+        <span class="n">opts</span><span class="o">.</span><span class="n">pidfile</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">opts</span></div>
 
 
@@ -145,6 +156,14 @@
     <span class="sd">&quot;&quot;&quot;Core running logic for the program.&quot;&quot;&quot;</span>
     <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.main&quot;</span> <span class="o">%</span> <span class="vm">__name__</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Start&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">opts</span><span class="o">.</span><span class="n">pidfile</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">pidfile</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">pidfile</span><span class="p">:</span>
+                <span class="n">pidfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to create pid file: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 
     <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">Config</span><span class="p">(</span><span class="n">opts</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="n">opts</span><span class="o">.</span><span class="n">confd</span><span class="p">)</span>
     <span class="n">sched</span> <span class="o">=</span> <span class="n">schedule</span><span class="o">.</span><span class="n">Schedule</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
