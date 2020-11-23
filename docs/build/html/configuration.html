@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Configuration Guide &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="libnrdpd.util" href="libnrdpd.util.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration-guide">
+<h1>Configuration Guide<a class="headerlink" href="#configuration-guide" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>Configuration guide for the nrdpd daemon and libnrdpd.</p>
+<div class="section" id="configuration-files">
+<h2>Configuration Files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h2>
+<p>The default locations for the nrdpd files vary depending on platform.</p>
+<div class="section" id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<p>The configuration files on the Windows platform will be installed in the same
+location as the executables.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Base configuration file
+C:\Program Files\nrdpd\config.ini
+
+# Additional configuration files
+c:\Program Files\nrdpd\conf.d\*.ini
+</pre></div>
+</div>
+</div>
+<div class="section" id="posix">
+<h3>Posix<a class="headerlink" href="#posix" title="Permalink to this headline">¶</a></h3>
+<p>The configuration files on Posix platforms (Linux, *BSD,  Mac OS) will be
+installed in <code class="docutils literal notranslate"><span class="pre">/etc/nrdpd</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Base configuration file
+/etc/nrdpd/config.ini
+
+# Additional configuration files
+/etc/nrdpd/conf.d/*.ini
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="configuring-nrdpd-as-a-service">
+<h2>Configuring nrdpd as a service<a class="headerlink" href="#configuring-nrdpd-as-a-service" title="Permalink to this headline">¶</a></h2>
+<p>In order to work as designed <code class="docutils literal notranslate"><span class="pre">nrdpd</span></code> needs to be installed as a service
+on your platform.  The gist of it is to run <code class="docutils literal notranslate"><span class="pre">nrdpd</span></code> as a background process,
+so any method you have of doing that should be valid.</p>
+<p>Listed below are just a few possibilities.</p>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="rc-local">
+<h4>rc.local<a class="headerlink" href="#rc-local" title="Permalink to this headline">¶</a></h4>
+<p>Adding the following line to /etc/rc.local should start nrdpd safely in the
+background.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/usr/bin/nrdpd &lt;/dev/null &gt;/dev/null <span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span> <span class="p">&amp;</span>
+</pre></div>
+</div>
+<p>In this case make sure you have the trailing <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> otherwise your system
+will hang on boot at that point.</p>
+</div>
+<div class="section" id="systemd">
+<h4>systemd<a class="headerlink" href="#systemd" title="Permalink to this headline">¶</a></h4>
+<p>Creaet a systmed file named <code class="docutils literal notranslate"><span class="pre">/lib/systemd/system/nrdpd.service</span></code> with the
+following contents:</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
+<span class="na">Description</span><span class="o">=</span><span class="s">Nagios Remote Data Processing Daemon</span>
+<span class="na">Documentation</span><span class="o">=</span><span class="s">https://nrdpd-daemon.readthedocs.io/</span>
+<span class="na">After</span><span class="o">=</span><span class="s">network.target</span>
+
+<span class="k">[Service]</span>
+<span class="na">User</span><span class="o">=</span><span class="s">root</span>
+<span class="na">Group</span><span class="o">=</span><span class="s">root</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/nrdpd</span>
+
+<span class="k">[Install]</span>
+<span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id1">
+<h3>Windows<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>Add creating service in windows</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="libnrdpd.html">libnrdpd</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-files">Configuration Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuring-nrdpd-as-a-service">Configuring nrdpd as a service</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="libnrdpd.util.html" title="previous chapter">libnrdpd.util</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/configuration.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

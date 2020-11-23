@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>libnrdpd.schedule &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="libnrdpd.task" href="libnrdpd.task.html" />
+    <link rel="prev" title="libnrdpd.nrdp" href="libnrdpd.nrdp.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-libnrdpd.schedule">
+<span id="libnrdpd-schedule"></span><h1>libnrdpd.schedule<a class="headerlink" href="#module-libnrdpd.schedule" title="Permalink to this headline">¶</a></h1>
+<p>Core scheduling and execution.</p>
+<dl class="py class">
+<dt id="libnrdpd.schedule.Schedule">
+<em class="property">class </em><code class="sig-prename descclassname">libnrdpd.schedule.</code><code class="sig-name descname">Schedule</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/schedule.html#Schedule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.schedule.Schedule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Handle scheduling of checks</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cfg</strong> (<a class="reference internal" href="libnrdpd.config.html#libnrdpd.config.Config" title="libnrdpd.config.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">libnrdpd.config.Config</span></code></a>) – Config object</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Raised when incoming <code class="docutils literal notranslate"><span class="pre">cfg</span></code> is of the wrong type.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="libnrdpd.schedule.Schedule.loop">
+<code class="sig-name descname">loop</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/schedule.html#Schedule.loop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.schedule.Schedule.loop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main engine for the nrdpd daemon.</p>
+<p>Run in a loop forever executing checks and submitting them.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.schedule.Schedule.sort">
+<code class="sig-name descname">sort</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/schedule.html#Schedule.sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.schedule.Schedule.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Re-sort the queue for processing</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="libnrdpd.html">libnrdpd</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.config.html">libnrdpd.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.error.html">libnrdpd.error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.main.html">libnrdpd.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.nrdp.html">libnrdpd.nrdp</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">libnrdpd.schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.task.html">libnrdpd.task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.util.html">libnrdpd.util</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Guide</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="libnrdpd.html">libnrdpd</a><ul>
+      <li>Previous: <a href="libnrdpd.nrdp.html" title="previous chapter">libnrdpd.nrdp</a></li>
+      <li>Next: <a href="libnrdpd.task.html" title="next chapter">libnrdpd.task</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/libnrdpd.schedule.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

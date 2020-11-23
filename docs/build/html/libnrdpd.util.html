@@ -1,0 +1,216 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>libnrdpd.util &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configuration Guide" href="configuration.html" />
+    <link rel="prev" title="libnrdpd.task" href="libnrdpd.task.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-libnrdpd.util">
+<span id="libnrdpd-util"></span><h1>libnrdpd.util<a class="headerlink" href="#module-libnrdpd.util" title="Permalink to this headline">¶</a></h1>
+<p>Supporting utility functions for the librndpd library.</p>
+<dl class="py class">
+<dt id="libnrdpd.util.IP">
+<em class="property">class </em><code class="sig-prename descclassname">libnrdpd.util.</code><code class="sig-name descname">IP</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ipv4</span></em>, <em class="sig-param"><span class="n">ipv6</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/util.html#IP"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.util.IP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class defining the IP address for a host.</p>
+<dl class="simple">
+<dt>Params:</dt><dd><p>ipv4 (str or None): IPv4 address
+ipv6 (str or None): IPv6 address</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="libnrdpd.util.IP.address">
+<em class="property">property </em><code class="sig-name descname">address</code><a class="headerlink" href="#libnrdpd.util.IP.address" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default IP address for the host.</p>
+<p>The preference is for IPv6, so if both an IPv6 and IPv4 address are
+defined on the host, it will use the IPv6 address.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.util.IP.v4">
+<em class="property">property </em><code class="sig-name descname">v4</code><a class="headerlink" href="#libnrdpd.util.IP.v4" title="Permalink to this definition">¶</a></dt>
+<dd><p>IPv4 address if present.</p>
+<p>If no IPv4 address is defined for the host this will return 127.0.0.1.
+This is to make sure configs at least have <em>something</em> to report when
+someone forces {ip.v4}.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.util.IP.v6">
+<em class="property">property </em><code class="sig-name descname">v6</code><a class="headerlink" href="#libnrdpd.util.IP.v6" title="Permalink to this definition">¶</a></dt>
+<dd><p>IPv6 address if present.</p>
+<p>If no IPv6 address is defined for the host this will return ::1.
+This is to make sure configs at least have <em>something</em> to report when
+someone forces {ip.v6}.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="libnrdpd.util.getip">
+<code class="sig-prename descclassname">libnrdpd.util.</code><code class="sig-name descname">getip</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/util.html#getip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.util.getip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the IP of the machine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt><a class="reference internal" href="#libnrdpd.util.IP" title="libnrdpd.util.IP"><code class="xref py py-class docutils literal notranslate"><span class="pre">IP</span></code></a></dt><dd><p>Representing the IP address of the box</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="libnrdpd.error.html#libnrdpd.error.NrdpdError" title="libnrdpd.error.NrdpdError"><strong>libnrdpd.error.NrdpdError</strong></a> – When no IP is able to be determined.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="libnrdpd.util.min_float_val">
+<code class="sig-prename descclassname">libnrdpd.util.</code><code class="sig-name descname">min_float_val</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">minval</span></em>, <em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/util.html#min_float_val"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.util.min_float_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert argument to float assuring it meets it’s minimal value.</p>
+<dl class="simple">
+<dt>Params:</dt><dd><p>value: Incoming value to convert and validate.
+minval: Minimal value for the float.
+name: Used in exceptions to identify the bad variable.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Raises</dt>
+<dd class="field-odd"><p><a class="reference internal" href="libnrdpd.error.html#libnrdpd.error.ConfigError" title="libnrdpd.error.ConfigError"><strong>libnrdpd.error.ConfigError</strong></a> – Raised on invalid numbers.  The <code class="docutils literal notranslate"><span class="pre">.err</span></code> property is set to
+    <a class="reference internal" href="libnrdpd.error.html#libnrdpd.error.Err" title="libnrdpd.error.Err"><code class="xref py py-class docutils literal notranslate"><span class="pre">TYPE_ERROR</span></code></a> when conversion to float
+    fails.  It is set to <a class="reference internal" href="libnrdpd.error.html#libnrdpd.error.Err" title="libnrdpd.error.Err"><code class="xref py py-class docutils literal notranslate"><span class="pre">VALUE_ERROR</span></code></a>
+    when the value doesn’t meet the <code class="docutils literal notranslate"><span class="pre">minval</span></code> minimum value.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt id="libnrdpd.util.IPV4_ADDRS">
+<code class="sig-prename descclassname">libnrdpd.util.</code><code class="sig-name descname">IPV4_ADDRS</code><em class="property"> = ['1.1.1.1', '8.8.8.8', '74.6.231.2', '23.53.34.25', '23.10.60.33', '144.160.155.43']</em><a class="headerlink" href="#libnrdpd.util.IPV4_ADDRS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test addresses for determining host’s IPv4 address.</p>
+<p>No traffic is sent, just a UDP socket is created so we can determine what
+the OS thinks is a good default route IP address.  Many IPs are tested to
+acquire a statistical model of the most likely default route.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt id="libnrdpd.util.IPV6_ADDRS">
+<code class="sig-prename descclassname">libnrdpd.util.</code><code class="sig-name descname">IPV6_ADDRS</code><em class="property"> = ['2620:119:35::35', '2001:4860:4860::8888', '2001:4998:44:3507::8001', '2600:1409:3800::ace8:c60', '2600:1406:1a:38d::2add', '2001:1890:1c00:3113::f:3005']</em><a class="headerlink" href="#libnrdpd.util.IPV6_ADDRS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test addresses for determining host’s IPv6 address.</p>
+<p>No traffic is sent, just a UDP socket is created so we can determine what
+the OS thinks is a good default route IP address.  Many IPs are tested to
+acquire a statistical model of the most likely default route.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="libnrdpd.html">libnrdpd</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.config.html">libnrdpd.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.error.html">libnrdpd.error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.main.html">libnrdpd.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.nrdp.html">libnrdpd.nrdp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.schedule.html">libnrdpd.schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.task.html">libnrdpd.task</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">libnrdpd.util</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Guide</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="libnrdpd.html">libnrdpd</a><ul>
+      <li>Previous: <a href="libnrdpd.task.html" title="previous chapter">libnrdpd.task</a></li>
+      <li>Next: <a href="configuration.html" title="next chapter">Configuration Guide</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/libnrdpd.util.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

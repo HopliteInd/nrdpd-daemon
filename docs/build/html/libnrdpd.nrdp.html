@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>libnrdpd.nrdp &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="libnrdpd.schedule" href="libnrdpd.schedule.html" />
+    <link rel="prev" title="libnrdpd.main" href="libnrdpd.main.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-libnrdpd.nrdp">
+<span id="libnrdpd-nrdp"></span><h1>libnrdpd.nrdp<a class="headerlink" href="#module-libnrdpd.nrdp" title="Permalink to this headline">¶</a></h1>
+<p>Funcitons for submitting results to the NRDP endpiont.</p>
+<dl class="py function">
+<dt id="libnrdpd.nrdp.submit">
+<code class="sig-prename descclassname">libnrdpd.nrdp.</code><code class="sig-name descname">submit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfg</span></em>, <em class="sig-param"><span class="n">task</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/nrdp.html#submit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.nrdp.submit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submit a completed task to nagios via nrdp.</p>
+<p>This will submit the request to all servers in the servers
+config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfg</strong> (<a class="reference internal" href="libnrdpd.config.html#libnrdpd.config.Config" title="libnrdpd.config.Config"><em>libnrdpd.config.Config</em></a>) – libnrdpd Config object</p></li>
+<li><p><strong>task</strong> (<a class="reference internal" href="libnrdpd.task.html#libnrdpd.task.Task" title="libnrdpd.task.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">libnrdpd.task.Task</span></code></a>) – Completed task that needs to
+be sent to the central nagios server.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="libnrdpd.error.html#libnrdpd.error.NotComplete" title="libnrdpd.error.NotComplete"><strong>libnrdpd.error.NotComplete</strong></a> – Raised when an uncompleted
+    task is passed in.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="libnrdpd.html">libnrdpd</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.config.html">libnrdpd.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.error.html">libnrdpd.error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.main.html">libnrdpd.main</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">libnrdpd.nrdp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.schedule.html">libnrdpd.schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.task.html">libnrdpd.task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.util.html">libnrdpd.util</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Guide</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="libnrdpd.html">libnrdpd</a><ul>
+      <li>Previous: <a href="libnrdpd.main.html" title="previous chapter">libnrdpd.main</a></li>
+      <li>Next: <a href="libnrdpd.schedule.html" title="next chapter">libnrdpd.schedule</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/libnrdpd.nrdp.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
