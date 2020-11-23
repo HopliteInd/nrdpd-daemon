@@ -1,5 +1,6 @@
 include LICENSE
 include tox.ini
 recursive-include tests *
+recursive-include docs *
 
 global-exclude *.py[cod]

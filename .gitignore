@@ -3,7 +3,6 @@ __pycache__/
 *.swp
 nrdpd
 .testrepository/
-html/
-doctrees/
+doc-out/
 .tox/
 dist/
