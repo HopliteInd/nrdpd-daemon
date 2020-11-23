@@ -244,8 +244,8 @@ class Task:  # pylint: disable=R0902
         This is only valid if the task has been completed.  The value
         will be -1.0 if the task hasn't completed yet.
         """
-        if self._ended is not None and self._started is not None:
-            retval = self._ended - self._started
+        if self._ended is not None and self._began is not None:
+            retval = self._ended - self._began
         else:
             retval = -1.0
         return retval

@@ -1,9 +1,7 @@
-.gitignore
 LICENSE
 MANIFEST.in
 Makefile
 README.rst
-make.bat
 pyproject.toml
 requirements-doc.txt
 setup.cfg

@@ -277,8 +277,8 @@
 <span class="sd">        This is only valid if the task has been completed.  The value</span>
 <span class="sd">        will be -1.0 if the task hasn&#39;t completed yet.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ended</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ended</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_started</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ended</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_began</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">retval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ended</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_began</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">retval</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span>
         <span class="k">return</span> <span class="n">retval</span></div>
