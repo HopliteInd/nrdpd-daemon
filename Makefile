@@ -20,5 +20,6 @@ html: Makefile
 	@rm -rf doc-out docs
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 	@mv doc-out/html docs
+	@ touch docs/.nojekyll
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
