@@ -15,6 +15,7 @@ BUILDDIR      = doc-out
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 
 all:
+	make github
 	python3 setup.py sdist
 
 html: Makefile
