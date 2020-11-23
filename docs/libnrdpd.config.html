@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>libnrdpd.config &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="libnrdpd.error" href="libnrdpd.error.html" />
+    <link rel="prev" title="libnrdpd" href="libnrdpd.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="libnrdpd-config">
+<h1>libnrdpd.config<a class="headerlink" href="#libnrdpd-config" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-libnrdpd.config"></span><p>If writing your own wrapper around librndpd you should likely start here.
+The primary object to interact with is <a class="reference internal" href="#libnrdpd.config.Config" title="libnrdpd.config.Config"><code class="xref py py-class docutils literal notranslate"><span class="pre">Config</span></code></a>.  From there you can
+use that configuration object to execute checks and submit the results.</p>
+<dl class="py class">
+<dt id="libnrdpd.config.Check">
+<em class="property">class </em><code class="sig-prename descclassname">libnrdpd.config.</code><code class="sig-name descname">Check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">command</span></em>, <em class="sig-param"><span class="n">timeout</span></em>, <em class="sig-param"><span class="n">frequency</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/config.html#Check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.config.Check" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class describing an individual check.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>) – Check name.  This is the name that is submitted to nagios and
+must be in sync with the nagios config files.  This name is case
+sensitive.</p></li>
+<li><p><strong>command</strong> (<em>list of str</em>) – The command to execute.  Each element is
+evaluated for variable substitution.</p></li>
+<li><p><strong>timeout</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>) – How long in seconds to allow a check to run before terminating
+it and reporting CRITICAL due to timeout.</p></li>
+<li><p><strong>frequency</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>) – How often in seconds the check should run.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="libnrdpd.error.html#libnrdpd.error.ConfigError" title="libnrdpd.error.ConfigError"><strong>error.ConfigError</strong></a> – Raised if timeout or frequency are not able to be treated as
+    float values.  <code class="docutils literal notranslate"><span class="pre">.err</span></code> attribute is set to
+    <code class="xref py py-class docutils literal notranslate"><span class="pre">VALUE_ERROR</span></code></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="libnrdpd.config.Check.command">
+<em class="property">property </em><code class="sig-name descname">command</code><a class="headerlink" href="#libnrdpd.config.Check.command" title="Permalink to this definition">¶</a></dt>
+<dd><p>A ‘new’ list of the command to run.</p>
+<p>Any template variables have not been filled out yet.  See
+<a class="reference internal" href="libnrdpd.task.html#libnrdpd.task.Task" title="libnrdpd.task.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">libnrdpd.task.Task</span></code></a> for handling of templates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Check.frequency">
+<em class="property">property </em><code class="sig-name descname">frequency</code><a class="headerlink" href="#libnrdpd.config.Check.frequency" title="Permalink to this definition">¶</a></dt>
+<dd><p>The check should run every X seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Check.name">
+<em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#libnrdpd.config.Check.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the check (read only).</p>
+<p>This value is the same as is in the nagios config file.  It’s case
+sensitive and can only be set during object creation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Check.timeout">
+<em class="property">property </em><code class="sig-name descname">timeout</code><a class="headerlink" href="#libnrdpd.config.Check.timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>How long to run execute the check for before going CRITICAL.</p>
+<p>Once this time value has been hit, the individual check process
+is terminated and CRITICAL is reported back to nagios.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="libnrdpd.config.Config">
+<em class="property">class </em><code class="sig-prename descclassname">libnrdpd.config.</code><code class="sig-name descname">Config</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cfgfile</span></em>, <em class="sig-param"><span class="n">confd</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/config.html#Config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.config.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration class for nrdpd.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cfgfile</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">IOBase</span></code>]) – Path to the nrdpd config.ini file.  The value passed in may
+be either a <code class="docutils literal notranslate"><span class="pre">str</span></code> or an open file like object derived from
+<code class="docutils literal notranslate"><span class="pre">io.IOBase</span></code>.</p></li>
+<li><p><strong>confd</strong> (<em>str</em><em> or  </em><em>None</em>) – Optional path to the conf.d directory.  Any
+files matching the pattern <code class="docutils literal notranslate"><span class="pre">*.ini</span></code> within that directory will
+be processed, possibly overriding existing values. The priority
+on the files is that they are processed in lexical order, with
+later files having the possibility to override earlier ones.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="libnrdpd.config.Config.cacert">
+<em class="property">property </em><code class="sig-name descname">cacert</code><a class="headerlink" href="#libnrdpd.config.Config.cacert" title="Permalink to this definition">¶</a></dt>
+<dd><p>CA certificate file if specified in the config</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Config.checks">
+<em class="property">property </em><code class="sig-name descname">checks</code><a class="headerlink" href="#libnrdpd.config.Config.checks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary describing checks to be run.</p>
+<p>Using this property will create a duplicate dictionary that
+you can modify without affecting the internal data structres within
+this class.  The individual <a class="reference internal" href="#libnrdpd.config.Check" title="libnrdpd.config.Check"><code class="xref py py-class docutils literal notranslate"><span class="pre">Check</span></code></a> objects can be modified
+within their contstaints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict of str, <a class="reference internal" href="#libnrdpd.config.Check" title="libnrdpd.config.Check"><code class="xref py py-class docutils literal notranslate"><span class="pre">Check</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Config.host">
+<em class="property">property </em><code class="sig-name descname">host</code><a class="headerlink" href="#libnrdpd.config.Config.host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Host name presented to nagios.</p>
+<p>By default this will be the short name.   If you want a fully qualified
+domain name add it to the config file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Config.ip">
+<em class="property">property </em><code class="sig-name descname">ip</code><a class="headerlink" href="#libnrdpd.config.Config.ip" title="Permalink to this definition">¶</a></dt>
+<dd><p>IP address of the machine</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">util.IP</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Config.servers">
+<em class="property">property </em><code class="sig-name descname">servers</code><a class="headerlink" href="#libnrdpd.config.Config.servers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Urls for servers to publish NRDP results to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list of str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.config.Config.token">
+<em class="property">property </em><code class="sig-name descname">token</code><a class="headerlink" href="#libnrdpd.config.Config.token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Server authentication token.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="libnrdpd.html">libnrdpd</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">libnrdpd.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.error.html">libnrdpd.error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.main.html">libnrdpd.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.nrdp.html">libnrdpd.nrdp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.schedule.html">libnrdpd.schedule</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.task.html">libnrdpd.task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.util.html">libnrdpd.util</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Guide</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="libnrdpd.html">libnrdpd</a><ul>
+      <li>Previous: <a href="libnrdpd.html" title="previous chapter">libnrdpd</a></li>
+      <li>Next: <a href="libnrdpd.error.html" title="next chapter">libnrdpd.error</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/libnrdpd.config.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

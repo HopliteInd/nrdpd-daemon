@@ -1,0 +1,289 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>libnrdpd.task &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="libnrdpd.util" href="libnrdpd.util.html" />
+    <link rel="prev" title="libnrdpd.schedule" href="libnrdpd.schedule.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-libnrdpd.task">
+<span id="libnrdpd-task"></span><h1>libnrdpd.task<a class="headerlink" href="#module-libnrdpd.task" title="Permalink to this headline">¶</a></h1>
+<p>Core scheduling and execution.</p>
+<dl class="py class">
+<dt id="libnrdpd.task.Task">
+<em class="property">class </em><code class="sig-prename descclassname">libnrdpd.task.</code><code class="sig-name descname">Task</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">check</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/task.html#Task"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.task.Task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Definition of a task to run in the scheduler.</p>
+<dl class="py method">
+<dt id="libnrdpd.task.Task.reset">
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/task.html#Task.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.task.Task.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset task so it can be run again.</p>
+<p>Call this when you have completed processing a given run of a task.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.reset_start">
+<code class="sig-name descname">reset_start</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/task.html#Task.reset_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.task.Task.reset_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set start time for the NEXT check.</p>
+<p>This happens automatically during run() and reset().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/libnrdpd/task.html#Task.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#libnrdpd.task.Task.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Start the execution of the check associated with this task.</p>
+<p>Convert the variables in the command from the check into something
+that can be used in <code class="docutils literal notranslate"><span class="pre">os.execvp</span></code>.</p>
+<p>Params:</p>
+<blockquote>
+<div><p>kwargs: Template variables to fill in.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.began">
+<em class="property">property </em><code class="sig-name descname">began</code><a class="headerlink" href="#libnrdpd.task.Task.began" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time when the current run of the check began.</p>
+<p>Before the process has started this will be <code class="docutils literal notranslate"><span class="pre">None</span></code>.  Once a
+process has been started this will be a float indicating the
+start time for the current run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.check">
+<em class="property">property </em><code class="sig-name descname">check</code><a class="headerlink" href="#libnrdpd.task.Task.check" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Check associated with this task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">config.Check</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.complete">
+<em class="property">property </em><code class="sig-name descname">complete</code><a class="headerlink" href="#libnrdpd.task.Task.complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tell if the task has completed.</p>
+<p>Keep checking this value to see if the check has completed.  Each
+check of this value will initiate an output check and process that
+output of any was found.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.elapsed">
+<em class="property">property </em><code class="sig-name descname">elapsed</code><a class="headerlink" href="#libnrdpd.task.Task.elapsed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Elapsed execution time.</p>
+<p>This is only valid if the task has been completed.  The value
+will be -1.0 if the task hasn’t completed yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.ended">
+<em class="property">property </em><code class="sig-name descname">ended</code><a class="headerlink" href="#libnrdpd.task.Task.ended" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time when the “current” run of the check ended.</p>
+<p>A value of <code class="docutils literal notranslate"><span class="pre">None</span></code> indicates that the Task hasn’t detected
+that the process has ended yet.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.expired">
+<em class="property">property </em><code class="sig-name descname">expired</code><a class="headerlink" href="#libnrdpd.task.Task.expired" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tells if a check has exceeded it’s timeout value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.start">
+<em class="property">property </em><code class="sig-name descname">start</code><a class="headerlink" href="#libnrdpd.task.Task.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Next scheduled execution time in epoch time.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.status">
+<em class="property">property </em><code class="sig-name descname">status</code><a class="headerlink" href="#libnrdpd.task.Task.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>The exit code for the process.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code>:  The Task hasn’t processed the execution status yet.</p></li>
+<li><dl class="simple">
+<dt>Positive <code class="docutils literal notranslate"><span class="pre">int</span></code>: The exit status of the check.  To be valid</dt><dd><p>with the Nagios API this must be in the range 0-3.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Negative <code class="docutils literal notranslate"><span class="pre">int</span></code>: The nagios check exited with a signal.  The abs()</dt><dd><p>value of this is the signal that it terminated with.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.stderr">
+<em class="property">property </em><code class="sig-name descname">stderr</code><a class="headerlink" href="#libnrdpd.task.Task.stderr" title="Permalink to this definition">¶</a></dt>
+<dd><p>stderr from the check.</p>
+<p>A value other than <code class="docutils literal notranslate"><span class="pre">None</span></code> is considered a failed check.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="libnrdpd.task.Task.stdout">
+<em class="property">property </em><code class="sig-name descname">stdout</code><a class="headerlink" href="#libnrdpd.task.Task.stdout" title="Permalink to this definition">¶</a></dt>
+<dd><p>stdout from the check.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="libnrdpd.html">libnrdpd</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.config.html">libnrdpd.config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.error.html">libnrdpd.error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.main.html">libnrdpd.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.nrdp.html">libnrdpd.nrdp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.schedule.html">libnrdpd.schedule</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">libnrdpd.task</a></li>
+<li class="toctree-l2"><a class="reference internal" href="libnrdpd.util.html">libnrdpd.util</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Guide</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="libnrdpd.html">libnrdpd</a><ul>
+      <li>Previous: <a href="libnrdpd.schedule.html" title="previous chapter">libnrdpd.schedule</a></li>
+      <li>Next: <a href="libnrdpd.util.html" title="next chapter">libnrdpd.util</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/libnrdpd.task.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

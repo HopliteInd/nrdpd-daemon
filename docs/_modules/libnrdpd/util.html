@@ -1,0 +1,343 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>libnrdpd.util &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for libnrdpd.util</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2020 Hoplite Industries, Inc.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;Supporting utility functions for the librndpd library.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">ipaddress</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="c1"># Local imports</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">error</span>
+
+
+<span class="n">IPV6_ADDRS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;2620:119:35::35&quot;</span><span class="p">,</span>  <span class="c1"># OpenDNS DNS server</span>
+    <span class="s2">&quot;2001:4860:4860::8888&quot;</span><span class="p">,</span>  <span class="c1"># Google Public DNS server</span>
+    <span class="s2">&quot;2001:4998:44:3507::8001&quot;</span><span class="p">,</span>  <span class="c1"># Yahoo.com public IP</span>
+    <span class="s2">&quot;2600:1409:3800::ace8:c60&quot;</span><span class="p">,</span>  <span class="c1"># www.army.mil</span>
+    <span class="s2">&quot;2600:1406:1a:38d::2add&quot;</span><span class="p">,</span>  <span class="c1"># whitehouse.gov</span>
+    <span class="s2">&quot;2001:1890:1c00:3113::f:3005&quot;</span><span class="p">,</span>  <span class="c1"># att.com</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;Test addresses for determining host&#39;s IPv6 address.</span>
+
+<span class="sd">No traffic is sent, just a UDP socket is created so we can determine what</span>
+<span class="sd">the OS thinks is a good default route IP address.  Many IPs are tested to</span>
+<span class="sd">acquire a statistical model of the most likely default route.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">IPV4_ADDRS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;1.1.1.1&quot;</span><span class="p">,</span>  <span class="c1"># cloudflare public DNS server</span>
+    <span class="s2">&quot;8.8.8.8&quot;</span><span class="p">,</span>  <span class="c1"># Google Public DNS server</span>
+    <span class="s2">&quot;74.6.231.2&quot;</span><span class="p">,</span>  <span class="c1"># Yahoo.com public IP</span>
+    <span class="s2">&quot;23.53.34.25&quot;</span><span class="p">,</span>  <span class="c1"># www.army.mil</span>
+    <span class="s2">&quot;23.10.60.33&quot;</span><span class="p">,</span>  <span class="c1"># whitehouse.gov</span>
+    <span class="s2">&quot;144.160.155.43&quot;</span><span class="p">,</span>  <span class="c1"># att.com</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;Test addresses for determining host&#39;s IPv4 address.</span>
+
+<span class="sd">No traffic is sent, just a UDP socket is created so we can determine what</span>
+<span class="sd">the OS thinks is a good default route IP address.  Many IPs are tested to</span>
+<span class="sd">acquire a statistical model of the most likely default route.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="min_float_val"><a class="viewcode-back" href="../../libnrdpd.util.html#libnrdpd.util.min_float_val">[docs]</a><span class="k">def</span> <span class="nf">min_float_val</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">minval</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert argument to float assuring it meets it&#39;s minimal value.</span>
+
+<span class="sd">    Params:</span>
+<span class="sd">        value: Incoming value to convert and validate.</span>
+<span class="sd">        minval: Minimal value for the float.</span>
+<span class="sd">        name: Used in exceptions to identify the bad variable.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        :exc:`libnrdpd.error.ConfigError`</span>
+<span class="sd">            Raised on invalid numbers.  The ``.err`` property is set to</span>
+<span class="sd">            :class:`TYPE_ERROR &lt;libnrdpd.error.Err&gt;` when conversion to float</span>
+<span class="sd">            fails.  It is set to :class:`VALUE_ERROR &lt;libnrdpd.error.Err&gt;`</span>
+<span class="sd">            when the value doesn&#39;t meet the ``minval`` minimum value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.min_float_val&quot;</span> <span class="o">%</span> <span class="vm">__name__</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">&quot;start: value=</span><span class="si">%s</span><span class="s2"> minval=</span><span class="si">%s</span><span class="s2"> name=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">),</span>
+        <span class="nb">repr</span><span class="p">(</span><span class="n">minval</span><span class="p">),</span>
+        <span class="nb">repr</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">retval</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+            <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">TYPE_ERROR</span><span class="p">,</span>
+            <span class="s2">&quot;Value for &#39;</span><span class="si">%s</span><span class="s2">&#39; must be a number: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">err</span><span class="p">),</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">None</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">minimum</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">minval</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+            <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">TYPE_ERROR</span><span class="p">,</span>
+            <span class="s2">&quot;minval for &#39;</span><span class="si">%s</span><span class="s2">&#39; must be a number: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">err</span><span class="p">),</span>
+        <span class="p">)</span> <span class="kn">from</span> <span class="nn">None</span>
+    <span class="k">if</span> <span class="n">retval</span> <span class="o">&lt;</span> <span class="n">minimum</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+            <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">VALUE_ERROR</span><span class="p">,</span>
+            <span class="s2">&quot;Value for &#39;</span><span class="si">%s</span><span class="s2">&#39; must be greater than </span><span class="si">%0.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">minimum</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">retval</span></div>
+
+
+<div class="viewcode-block" id="IP"><a class="viewcode-back" href="../../libnrdpd.util.html#libnrdpd.util.IP">[docs]</a><span class="k">class</span> <span class="nc">IP</span><span class="p">:</span>  <span class="c1"># pylint: disable=C0103</span>
+    <span class="sd">&quot;&quot;&quot;Class defining the IP address for a host.</span>
+
+<span class="sd">    Params:</span>
+<span class="sd">        ipv4 (str or None): IPv4 address</span>
+<span class="sd">        ipv6 (str or None): IPv6 address</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ipv4</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">ipv6</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ipv4</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">ipv4</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ipv6</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">NrdpdError</span><span class="p">(</span>
+                <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">VALUE_ERROR</span><span class="p">,</span>
+                <span class="s2">&quot;IP(): At least one of ipv4 or ipv6 must be set&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ipv4</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ipaddress</span><span class="o">.</span><span class="n">IPv4Address</span><span class="p">(</span><span class="n">ipv4</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">NrdpdError</span><span class="p">(</span>
+                    <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">VALUE_ERROR</span><span class="p">,</span>
+                    <span class="s2">&quot;IPv4 address is not valid: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">err</span><span class="p">,</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ipv4</span> <span class="o">=</span> <span class="n">ipv4</span>
+
+        <span class="k">if</span> <span class="n">ipv6</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ipaddress</span><span class="o">.</span><span class="n">IPv6Address</span><span class="p">(</span><span class="n">ipv6</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">NrdpdError</span><span class="p">(</span>
+                    <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">VALUE_ERROR</span><span class="p">,</span>
+                    <span class="s2">&quot;IPv6 address is not valid: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">err</span><span class="p">,</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="o">=</span> <span class="n">ipv6</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv4</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.IP(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ipv4</span><span class="p">),</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">address</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Default IP address for the host.</span>
+
+<span class="sd">        The preference is for IPv6, so if both an IPv6 and IPv4 address are</span>
+<span class="sd">        defined on the host, it will use the IPv6 address.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv4</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">v4</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;IPv4 address if present.</span>
+
+<span class="sd">        If no IPv4 address is defined for the host this will return 127.0.0.1.</span>
+<span class="sd">        This is to make sure configs at least have *something* to report when</span>
+<span class="sd">        someone forces {ip.v4}.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv4</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv4</span> <span class="k">else</span> <span class="s2">&quot;127.0.0.1&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">v6</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;IPv6 address if present.</span>
+
+<span class="sd">        If no IPv6 address is defined for the host this will return ::1.</span>
+<span class="sd">        This is to make sure configs at least have *something* to report when</span>
+<span class="sd">        someone forces {ip.v6}.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ipv6</span> <span class="k">else</span> <span class="s2">&quot;::1&quot;</span></div>
+
+
+<div class="viewcode-block" id="getip"><a class="viewcode-back" href="../../libnrdpd.util.html#libnrdpd.util.getip">[docs]</a><span class="k">def</span> <span class="nf">getip</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Determine the IP of the machine.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        :class:`IP`</span>
+<span class="sd">            Representing the IP address of the box</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        :exc:`libnrdpd.error.NrdpdError`</span>
+<span class="sd">            When no IP is able to be determined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.getip&quot;</span> <span class="o">%</span> <span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="n">ipv6</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">remote</span> <span class="ow">in</span> <span class="n">IPV6_ADDRS</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET6</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">remote</span><span class="p">,</span> <span class="mi">53</span><span class="p">))</span>
+            <span class="n">ip</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># pylint: disable=C0103</span>
+            <span class="k">if</span> <span class="n">ip</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ipv6</span><span class="p">:</span>
+                <span class="n">ipv6</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ipv6</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;IPv6 address determined to be: </span><span class="si">%s</span><span class="s2"> going to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">remote</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Failed to create IPv6 socket to </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">remote</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="k">continue</span>
+    <span class="n">v6addr</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">addr</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ipv6</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">])]:</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">IPv6Address</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">test</span><span class="o">.</span><span class="n">is_loopback</span> <span class="ow">or</span> <span class="n">test</span><span class="o">.</span><span class="n">is_link_local</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">v6addr</span> <span class="o">=</span> <span class="n">test</span><span class="o">.</span><span class="n">compressed</span>
+        <span class="k">break</span>
+
+    <span class="n">ipv4</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">remote</span> <span class="ow">in</span> <span class="n">IPV4_ADDRS</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span>
+            <span class="n">sock</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">remote</span><span class="p">,</span> <span class="mi">53</span><span class="p">))</span>
+            <span class="n">ip</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">getsockname</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># pylint: disable=C0103</span>
+            <span class="k">if</span> <span class="n">ip</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ipv4</span><span class="p">:</span>
+                <span class="n">ipv4</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">ipv4</span><span class="p">[</span><span class="n">ip</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;IPv4 address determined to be: </span><span class="si">%s</span><span class="s2"> going to </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">ip</span><span class="p">,</span> <span class="n">remote</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Failed to create IPv4 socket to </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">remote</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="k">continue</span>
+    <span class="n">v4addr</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">addr</span> <span class="ow">in</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ipv4</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">])]:</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">IPv4Address</span><span class="p">(</span><span class="n">addr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">test</span><span class="o">.</span><span class="n">is_loopback</span> <span class="ow">or</span> <span class="n">test</span><span class="o">.</span><span class="n">is_link_local</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">v4addr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">test</span><span class="p">)</span>
+        <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">IP</span><span class="p">(</span><span class="n">v4addr</span><span class="p">,</span> <span class="n">v6addr</span><span class="p">)</span></div>
+
+
+<span class="c1"># End getip()</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../libnrdpd.html">libnrdpd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration Guide</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
