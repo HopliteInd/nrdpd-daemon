@@ -14,7 +14,8 @@
     <script src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="libnrdpd.util" href="libnrdpd.util.html" />
+    <link rel="next" title="Configuration Syntax" href="configuration.file.html" />
+    <link rel="prev" title="Nagios Remote Data Protocol Daemon" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -31,23 +32,33 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="configuration-guide">
-<h1>Configuration Guide<a class="headerlink" href="#configuration-guide" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
+  <div class="contents topic" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#configuration-guide" id="id3">Configuration Guide</a></p>
+<ul>
+<li><p><a class="reference internal" href="#configuration-files" id="id4">Configuration Files</a></p></li>
+<li><p><a class="reference internal" href="#configuration-syntax" id="id5">Configuration Syntax</a></p></li>
+<li><p><a class="reference internal" href="#configuring-nrdpd-as-a-service" id="id6">Configuring nrdpd as a service</a></p></li>
+</ul>
+</li>
+</ul>
 </div>
+<div class="section" id="configuration-guide">
+<h1><a class="toc-backref" href="#id3">Configuration Guide</a><a class="headerlink" href="#configuration-guide" title="Permalink to this headline">¶</a></h1>
 <p>Configuration guide for the nrdpd daemon and libnrdpd.</p>
 <div class="section" id="configuration-files">
-<h2>Configuration Files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id4">Configuration Files</a><a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h2>
 <p>The default locations for the nrdpd files vary depending on platform.</p>
 <div class="section" id="windows">
 <h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
 <p>The configuration files on the Windows platform will be installed in the same
 location as the executables.</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span># Base configuration file
-C:\Program Files\nrdpd\config.ini
+C:\Program Files\Python38\Scripts\config.ini
 
 # Additional configuration files
-c:\Program Files\nrdpd\conf.d\*.ini
+c:\Program Files\Python38\Scripts\conf.d\*.ini
 </pre></div>
 </div>
 </div>
@@ -64,8 +75,24 @@ installed in <code class="docutils literal notranslate"><span class="pre">/etc/n
 </div>
 </div>
 </div>
+<div class="section" id="configuration-syntax">
+<h2><a class="toc-backref" href="#id5">Configuration Syntax</a><a class="headerlink" href="#configuration-syntax" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<p class="caption"><span class="caption-text">Please see the following for configuration syntax</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="configuration.file.html">Configuration Syntax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.file.html#anatomy-of-a-configuration-file">Anatomy of a configuration file</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="configuration.file.html#default">[DEFAULT]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.file.html#config">[config]</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.file.html#check-service">[check:SERVICE]</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.file.html#deployment-recommendations">Deployment Recommendations</a></li>
+</ul>
+</div>
+</div>
 <div class="section" id="configuring-nrdpd-as-a-service">
-<h2>Configuring nrdpd as a service<a class="headerlink" href="#configuring-nrdpd-as-a-service" title="Permalink to this headline">¶</a></h2>
+<span id="service"></span><h2><a class="toc-backref" href="#id6">Configuring nrdpd as a service</a><a class="headerlink" href="#configuring-nrdpd-as-a-service" title="Permalink to this headline">¶</a></h2>
 <p>In order to work as designed <code class="docutils literal notranslate"><span class="pre">nrdpd</span></code> needs to be installed as a service
 on your platform.  The gist of it is to run <code class="docutils literal notranslate"><span class="pre">nrdpd</span></code> as a background process,
 so any method you have of doing that should be valid.</p>
@@ -88,13 +115,19 @@ will hang on boot at that point.</p>
 following contents:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
 <span class="na">Description</span><span class="o">=</span><span class="s">Nagios Remote Data Processing Daemon</span>
-<span class="na">Documentation</span><span class="o">=</span><span class="s">https://nrdpd-daemon.readthedocs.io/</span>
 <span class="na">After</span><span class="o">=</span><span class="s">network.target</span>
 
 <span class="k">[Service]</span>
+<span class="na">Type</span><span class="o">=</span><span class="s">simple</span>
+<span class="c1"># the specific user that our service will run as</span>
 <span class="na">User</span><span class="o">=</span><span class="s">root</span>
 <span class="na">Group</span><span class="o">=</span><span class="s">root</span>
+<span class="na">RuntimeDirectory</span><span class="o">=</span><span class="s">nrdpd</span>
+<span class="na">PidFile</span><span class="o">=</span><span class="s">/run/nrdpd.pid</span>
 <span class="na">ExecStart</span><span class="o">=</span><span class="s">/usr/bin/nrdpd</span>
+<span class="na">ExecReload</span><span class="o">=</span><span class="s">/bin/kill -s TERM $MAINPID</span>
+<span class="na">KillMode</span><span class="o">=</span><span class="s">mixed</span>
+<span class="na">TimeoutStopSec</span><span class="o">=</span><span class="s">5</span>
 
 <span class="k">[Install]</span>
 <span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
@@ -104,9 +137,14 @@ following contents:</p>
 </div>
 <div class="section" id="id1">
 <h3>Windows<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
-<div class="admonition-todo admonition" id="id2">
-<p class="admonition-title">Todo</p>
-<p>Add creating service in windows</p>
+<p>To install nrdpd as a service in windows it is recommended that you use a
+service manager such as <a class="reference external" href="http://nssm.cc">NSSM</a>.</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Installing nrdbd as a service with nssm</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>nssm install nrdbd &quot;C:\Program Files\Python38\Scripts\nrdbd.exe&quot;
+nssm start nrdbd
+</pre></div>
+</div>
 </div>
 </div>
 </div>
@@ -131,20 +169,22 @@ following contents:</p>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Components:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
-<li class="toctree-l1"><a class="reference internal" href="libnrdpd.html">libnrdpd</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Configuration Guide</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#configuration-files">Configuration Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-syntax">Configuration Syntax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuring-nrdpd-as-a-service">Configuring nrdpd as a service</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="libnrdpd.html">libnrdpd</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="libnrdpd.util.html" title="previous chapter">libnrdpd.util</a></li>
+      <li>Previous: <a href="index.html" title="previous chapter">Nagios Remote Data Protocol Daemon</a></li>
+      <li>Next: <a href="configuration.file.html" title="next chapter">Configuration Syntax</a></li>
   </ul></li>
 </ul>
 </div>

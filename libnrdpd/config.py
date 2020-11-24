@@ -21,7 +21,6 @@ use that configuration object to execute checks and submit the results.
 import configparser
 import glob
 import io
-import ipaddress
 import logging
 import os.path
 import re
@@ -66,6 +65,8 @@ class Check:
         frequency: int,
     ):
         self._name = str(name)
+        self._fake_it = False
+        self._host = None
 
         try:
             self._timeout = util.min_float_val(timeout, 1.0, "timeout")
@@ -79,7 +80,7 @@ class Check:
 
     @property
     def name(self):
-        """str: Name of the check (read only).
+        """str: Read only. Name of the check.
 
         This value is the same as is in the nagios config file.  It's case
         sensitive and can only be set during object creation.
@@ -89,7 +90,7 @@ class Check:
 
     @property
     def timeout(self):
-        """float: How long to run execute the check for before going CRITICAL.
+        """float: Read only. Execution time before timeout and going CRITICAL.
 
         Once this time value has been hit, the individual check process
         is terminated and CRITICAL is reported back to nagios.
@@ -99,17 +100,58 @@ class Check:
 
     @property
     def frequency(self):
-        """float: The check should run every X seconds."""
+        """float: Read only. The check should run every X seconds."""
         return self._frequency
 
     @property
     def command(self):
-        """list of str: A 'new' list of the command to run.
+        """list of str: Read only. A 'new' list of the command to run.
 
         Any template variables have not been filled out yet.  See
         :class:`libnrdpd.task.Task` for handling of templates.
         """
         return self._command
+
+    @property
+    def fake(self):
+        """bool: Send fake successful results.  This is to allow overriding
+        of templates where the template may be invalid for a host.  For
+        instance it allows you to generically check disk space on /var/log
+        but if a host doesn't have that partition, you can send a fake
+        success in to bypass it.
+        """
+        return self._fake_it
+
+    @fake.setter
+    def fake(self, value):
+        if not isinstance(value, bool):
+            raise error.ConfigError(
+                error.Err.VALUE_ERROR,
+                "[check:%s] fake must be a boolean" % (self._name),
+            )
+        self._fake_it = value
+
+    @property
+    def host(self):
+        """str or None: Override the host on a per check basis.
+        This allows you to override the hostname for a given check.  This
+        doesn't override the hostname the check is being submitted to,
+        but instead allows you to use the hostname in a template variable
+        with the check.
+
+        For instance if you have a web server with a virtual host, you can
+        define the virtual host here to use in the check command line.
+        """
+        return self._host
+
+    @host.setter
+    def host(self, value):
+        if not isinstance(value, str) and value is not None:
+            raise error.ConfigError(
+                error.Err.VALUE_ERROR,
+                "[check:%s] host must be a str or None" % (self._name),
+            )
+        self._host = value
 
 
 class Config:  # pylint: disable=R0902
@@ -245,25 +287,10 @@ class Config:  # pylint: disable=R0902
         # Depends on the upper to to validate that "[config]" exists.
         # Ternary operator handles "" as well as None when evaluating
         # True.
-        hostname = self._cp["config"].get("hostname")
+        hostname = self._cp["config"].get("host")
         self._hostname = hostname if hostname else self._hostname
         cacert = self._cp["config"].get("cacert")
         self._cacert = cacert if cacert else None
-
-        ip = self._cp["config"].get("ip")  # pylint: disable=C0103
-        if ip:
-            try:
-                test = ipaddress.ip_address(ip)
-            except ValueError as err:
-                raise error.ConfigError(
-                    error.Err.TYPE_ERROR,
-                    "[config]->ip invalid IP: %s: %s" % (ip, err),
-                ) from None
-
-            if test.version == 4:
-                self._ip = util.IP(str(test), None)
-            else:
-                self._ip = util.IP(None, test.compressed)
 
         # Validate values
         for server in self._servers:
@@ -299,8 +326,21 @@ class Config:  # pylint: disable=R0902
             timeout = self._cp[section].get("timeout", 10.0)
             frequency = self._cp[section].get("frequency", 60.0)
             command = self._get_req_opt(section, "command", shlex.split)
+            state = self._cp[section].get("state", "enable")
+            host = self._cp[section].get("host")
+            if host == "":
+                host = None
 
-            self._checks[name] = Check(name, command, timeout, frequency)
+            if state not in ["enable", "disable", "fake"]:
+                raise error.ConfigError(
+                    error.Err.VALUE_ERROR,
+                    "check [%s] state is invalid" % (section),
+                ) from None
+
+            if state != "disable":
+                self._checks[name] = Check(name, command, timeout, frequency)
+                self._checks[name].fake = state == "fake"
+                self._checks[name].host = host
 
     @property
     def checks(self):

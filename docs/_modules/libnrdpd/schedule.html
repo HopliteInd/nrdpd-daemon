@@ -94,6 +94,7 @@
 <span class="sd">        Run in a loop forever executing checks and submitting them.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.Schedule.loop&quot;</span> <span class="o">%</span> <span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Start main loop&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
@@ -131,8 +132,11 @@
             <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
             <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">:</span>
                 <span class="n">task</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Starting check: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_running</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
-                <span class="n">template</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">host</span><span class="p">,</span> <span class="s2">&quot;ip&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">ip</span><span class="p">}</span>
+                <span class="n">host</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">host</span> <span class="k">if</span> <span class="n">task</span><span class="o">.</span><span class="n">check</span><span class="o">.</span><span class="n">host</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">host</span>
+                <span class="n">template</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="n">host</span><span class="p">}</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Template variables: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">repr</span><span class="p">(</span><span class="n">template</span><span class="p">))</span>
                 <span class="n">task</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="o">**</span><span class="n">template</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
@@ -144,6 +148,9 @@
                 <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
                 <span class="n">sleepytime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">start</span> <span class="o">-</span> <span class="n">now</span>
                 <span class="k">if</span> <span class="n">sleepytime</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                        <span class="s2">&quot;sleeping </span><span class="si">%0.2f</span><span class="s2"> till next scheduled job&quot;</span><span class="p">,</span> <span class="n">sleepytime</span>
+                    <span class="p">)</span>
                     <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleepytime</span><span class="p">)</span></div></div>
 </pre></div>
 
@@ -165,9 +172,9 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Components:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../nrdpd.html">nrdpd Service</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../libnrdpd.html">libnrdpd</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nrdpd.html">nrdpd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../libnrdpd.html">libnrdpd</a></li>
 </ul>
 
 <div class="relations">

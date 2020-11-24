@@ -1,0 +1,303 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Configuration Syntax &#8212; libnrdpd 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="nrdpd" href="nrdpd.html" />
+    <link rel="prev" title="Configuration Guide" href="configuration.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="configuration-syntax">
+<h1>Configuration Syntax<a class="headerlink" href="#configuration-syntax" title="Permalink to this headline">¶</a></h1>
+<p id="index-0">All configuration files have identical syntax.  This allows for templating
+and overriding based on those templates. The templating is allowed by follwing
+a specific processing order with the files.</p>
+<p>The primary <code class="docutils literal notranslate"><span class="pre">config.ini</span></code> file is processed first.  After that the <code class="docutils literal notranslate"><span class="pre">*.ini</span></code>
+files in the <code class="docutils literal notranslate"><span class="pre">conf.d</span></code> directory are processed in lexical order. Each
+subsequent file in this processing chain can override values defined in prior
+files.</p>
+</div>
+<div class="section" id="anatomy-of-a-configuration-file">
+<h1>Anatomy of a configuration file<a class="headerlink" href="#anatomy-of-a-configuration-file" title="Permalink to this headline">¶</a></h1>
+<p>The configuration files for nrdpd are standard INI files.  The <code class="docutils literal notranslate"><span class="pre">DEFAULT</span></code>
+section is a magical section from which all others inherit.  You can use
+this section to set the defaults so you don’t have to replicate values in
+other sections (templating).</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">Example configuration file</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
+<span class="na">timeout</span> <span class="o">=</span> <span class="s">10</span>
+<span class="na">frequency</span> <span class="o">=</span> <span class="s">60</span>
+<span class="na">state</span> <span class="o">=</span> <span class="s">enable</span>
+<span class="na">host</span> <span class="o">=</span> <span class="s">webserver.example.com</span>
+
+<span class="k">[config]</span>
+<span class="na">servers</span> <span class="o">=</span> <span class="s">https://nagios.example.com/nrdp</span>
+<span class="na">token</span> <span class="o">=</span> <span class="s">SuperSecretToken</span>
+<span class="na">host</span> <span class="o">=</span> <span class="s">webserver.example.com</span>
+<span class="na">cacert</span> <span class="o">=</span> <span class="s">/etc/pki/tls/certs/example.com.CA.crt</span>
+
+<span class="k">[check:test]</span>
+<span class="na">command</span> <span class="o">=</span> <span class="s">sh -c &quot;echo &#39;Warning the sky is falling&#39;; exit 1&quot;</span>
+
+<span class="k">[check:test2]</span>
+<span class="na">command</span> <span class="o">=</span> <span class="s">sh -c &quot;echo &#39;Critical the sky fell&#39;; exit 2&quot;</span>
+
+<span class="k">[check:test3]</span>
+<span class="na">state</span> <span class="o">=</span> <span class="s">disable</span>
+</pre></div>
+</div>
+</div>
+<p>The only required section is the <code class="docutils literal notranslate"><span class="pre">[config]</span></code> section.  Obviously if you
+don’t have any checks, nothing will be submitted, so at least one check
+should be defined.</p>
+<div class="section" id="default">
+<h2>[DEFAULT]<a class="headerlink" href="#default" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">[DEFAULT]</span></code> section is optional.  Any option set here will be the default
+value for all other sections.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Please take note of the <code class="docutils literal notranslate"><span class="pre">host</span></code> option.  If you set that it will be the
+default in both the <code class="docutils literal notranslate"><span class="pre">[config]</span></code> section as well as in the individual
+<code class="docutils literal notranslate"><span class="pre">[check:*]</span></code> sections.</p>
+</div>
+</div>
+<div class="section" id="config">
+<h2>[config]<a class="headerlink" href="#config" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">[config]</span></code> section of the ini file is where the main options for
+nrdpd are set.  The valid options are:</p>
+<ul>
+<li><dl class="simple">
+<dt><strong>servers</strong>: <em>required</em> List of NRDP endpoints to submit results to.  You can</dt><dd><p>submit results to multiple servers.  The servers are separated with
+whitespace.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>token</strong>: <em>required</em> The NRDP authentication token.  This is necessary for</dt><dd><p>sending results in to the service.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>host</strong>: <em>optional</em> This is the name of the host in nagios.  By default</dt><dd><p>the library will populate this with the short name.</p>
+<p>For instance if your full hostname is <em>webserver.example.com</em> the library
+will poulate this with <em>webserver</em>.  If you populate the <code class="docutils literal notranslate"><span class="pre">host</span></code> option
+in the <code class="docutils literal notranslate"><span class="pre">[DEFAULT]</span></code> section and you need to revert to the short name
+you can either explicitly use the short name or just set host to
+a blank value.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[DEFAULT]</span>
+<span class="na">host</span> <span class="o">=</span> <span class="s">webserver.example.com</span>
+
+<span class="k">[config]</span>
+<span class="c1">; Default to what the library thinks</span>
+<span class="na">host</span> <span class="o">=</span>
+<span class="c1">; Override [DEFAULT] with the short name</span>
+<span class="na">host</span> <span class="o">=</span> <span class="s">webserver</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>cacert</strong>: <em>optional</em> If your nrdp endpoint is available via <code class="docutils literal notranslate"><span class="pre">https</span></code> and</dt><dd><p>you don’t have a public cert you may have to pass in the path to a valid
+x509 CA certificate in PEM format.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div>
+<div class="section" id="check-service">
+<h2>[check:SERVICE]<a class="headerlink" href="#check-service" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">[check:SERVICE</span> <span class="pre">NAME]</span></code> sections describe the individual service checks
+to run on the host.  The <code class="docutils literal notranslate"><span class="pre">SERVICE</span> <span class="pre">NAME</span></code> aspect needs to be exactly what is
+defined in the nagios configuration file under the service -&gt; name option.</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">Example nagios definition matching</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>define service {
+    name        SERVICE NAME
+    .....
+}
+</pre></div>
+</div>
+</div>
+<p>Below is a full configuration example for a service check in defined for nrdpd.</p>
+<div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[check:Load Average]</span>
+<span class="na">timeout</span> <span class="o">=</span> <span class="s">10</span>
+<span class="na">frequency</span> <span class="o">=</span> <span class="s">60</span>
+<span class="na">state</span> <span class="o">=</span> <span class="s">enable</span>
+<span class="na">host</span> <span class="o">=</span> <span class="s">irrelevant.example.com</span>
+<span class="na">command</span> <span class="o">=</span> <span class="s">/usr/lib64/nagios/plugins/check_load -w 15,10,5 -c 30,25,20</span>
+</pre></div>
+</div>
+<ul>
+<li><dl>
+<dt><strong>timeout</strong>: <em>optional</em> If the check does not complete within <code class="docutils literal notranslate"><span class="pre">timeout</span></code></dt><dd><p>seconds report the check as <code class="docutils literal notranslate"><span class="pre">CRITICAL</span></code> to Nagios.  The type for this
+value is float.  So anything that can reasonably be converted to a float
+is valid.</p>
+<p>The default value is <code class="docutils literal notranslate"><span class="pre">10.0</span></code> and the minimum value is <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>frequency</strong>: <em>optional</em> Define how frequent to execute the check.  The</dt><dd><p>internal algorithm for running this attempts to define this as start
+time to start time.  The only deviation to this will be if a previous
+execution time extends past the next scheduled start time.  In this case
+you will experience an offset change to the schedule.</p>
+<p>The default value is <code class="docutils literal notranslate"><span class="pre">60.0</span></code> and the minimum value is <code class="docutils literal notranslate"><span class="pre">10.0</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>state</strong>: <em>optional</em> Determine the state of the check.  This is really only</dt><dd><p>useful if you are planning on doing templates.  The valid values for this
+option are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>enable</strong>: <em>default</em> Enable the check to run as described.</p></li>
+<li><p><strong>disable</strong>: Do not run the check at all.</p></li>
+<li><dl class="simple">
+<dt><strong>fake</strong>: Send fake successful results to the nagios server.  This</dt><dd><p>option is so that you can build a generic template for disk checks
+and then for the one oddball host in a class that doesn’t have the
+specified disk, you can send in happy fake results.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><strong>host</strong>: <em>optional</em> This value is used in variable substitution within the</dt><dd><p><code class="docutils literal notranslate"><span class="pre">command</span></code>.  Any use of <code class="docutils literal notranslate"><span class="pre">$host</span></code> or <code class="docutils literal notranslate"><span class="pre">${host}</span></code> within the command will
+be substituted with this value.</p>
+<p>No validation of this value is done.  So anything you put in here can
+be used generically as a variable anywhere on the command line of the
+command.</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>command</strong>: <em>required</em> The nagios plugin to execute.</p>
+<blockquote>
+<div><p>Variable substitution can be done here.  Any value that matches
+<code class="docutils literal notranslate"><span class="pre">$variable</span></code> or <code class="docutils literal notranslate"><span class="pre">${variable}</span></code> will attempt to substitue the
+corresponding values in.  This feature is primarily of use to people
+using the libnrdpd library instead of nrdpd.  It allows you to customize
+things to a great extent.   If no corresponding variable is found then
+the literal <code class="docutils literal notranslate"><span class="pre">$variable</span></code> or <code class="docutils literal notranslate"><span class="pre">${variable}</span></code> will be in the command.</p>
+</div></blockquote>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="deployment-recommendations">
+<h1>Deployment Recommendations<a class="headerlink" href="#deployment-recommendations" title="Permalink to this headline">¶</a></h1>
+<p>The primary recommended deployment consists of a <code class="docutils literal notranslate"><span class="pre">config.ini</span></code> file with just
+the <code class="docutils literal notranslate"><span class="pre">[DEFAULT]</span></code> and <code class="docutils literal notranslate"><span class="pre">[config]</span></code> sections in them.   Then deploy your generic
+check template as say <code class="docutils literal notranslate"><span class="pre">conf.d/00-linux-checks.ini</span></code>, server class specific
+checks in <code class="docutils literal notranslate"><span class="pre">conf.d/50-apache-checks.ini</span></code> and finally any machine specific
+overrides or manual checks in <code class="docutils literal notranslate"><span class="pre">conf.d/99-local.ini</span></code>.</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">libnrdpd</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Components:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="configuration.html">Configuration Guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#configuration-files">Configuration Files</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="configuration.html#configuration-syntax">Configuration Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html#configuring-nrdpd-as-a-service">Configuring nrdpd as a service</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="libnrdpd.html">libnrdpd</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="configuration.html">Configuration Guide</a><ul>
+      <li>Previous: <a href="configuration.html" title="previous chapter">Configuration Guide</a></li>
+      <li>Next: <a href="nrdpd.html" title="next chapter">nrdpd</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Hoplite Industries, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/configuration.file.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

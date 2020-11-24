@@ -24,6 +24,7 @@ import time
 
 # Local imports
 from . import config
+from . import error
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
@@ -79,34 +80,43 @@ class Task:  # pylint: disable=R0902
         """
         log = logging.getLogger("%s.run" % __name__)
 
-        # Apply template variables
-        cmd = []
-        for element in self._check.command:
-            temp = string.Template(element)
-            cmd.append(temp.safe_substitute(kwargs))
-
         self.reset_start()
+        if self._check.fake:
+            self._child = True
+            self._began = time.time()
+            log.info("Faking check: %s", self._check.name)
+        else:
+            # Apply template variables
+            cmd = []
+            for element in self._check.command:
+                temp = string.Template(element)
+                cmd.append(temp.safe_substitute(kwargs))
 
-        # Set next start time for the queue
-        log.info("Running check: %s", " ".join([shlex.quote(x) for x in cmd]))
-        try:
-            self._child = subprocess.Popen(
-                cmd,
-                shell=False,
-                stdin=subprocess.DEVNULL,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                close_fds=True,
+            # Set next start time for the queue
+            log.info(
+                "Running check: %s", " ".join([shlex.quote(x) for x in cmd])
             )
-            self._running = True
-            self._began = time.time()
-        except OSError as err:
-            log.error("Unable to run [check:%s]: %s", self._check.name, err)
-            self._stderr.write(
-                "Unable to execute [check:%s]: %s" % (self._check.name, err)
-            )
-            self._began = time.time()
-            self._ended = time.time()
+            try:
+                self._child = subprocess.Popen(
+                    cmd,
+                    shell=False,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    close_fds=True,
+                )
+                self._running = True
+                self._began = time.time()
+            except OSError as err:
+                log.error(
+                    "Unable to run [check:%s]: %s", self._check.name, err
+                )
+                self._stderr.write(
+                    "Unable to execute [check:%s]: %s"
+                    % (self._check.name, err)
+                )
+                self._began = time.time()
+                self._ended = time.time()
 
     def reset_start(self):
         """Set start time for the NEXT check.
@@ -114,11 +124,23 @@ class Task:  # pylint: disable=R0902
         This happens automatically during run() and reset().
         """
 
+        log = logging.getLogger("%s.reset_start" % __name__)
         now = time.time()
         if self._start < now:
             self._start = self._start + self._check.frequency
             if self._start < now:
                 self._start = now + self._check.frequency
+            log.debug(
+                "[check:%s] Setting new start time: %s",
+                self._check.name,
+                time.ctime(self._start),
+            )
+        else:
+            log.debug(
+                "[check:%s] Keeping existing start time: %s",
+                self._check.name,
+                time.ctime(self._start),
+            )
 
     @property
     def complete(self):
@@ -153,6 +175,11 @@ class Task:  # pylint: disable=R0902
             else:
                 # Process just terminated, so record those things...
                 self._ended = time.time()
+        elif self._check.fake:
+            self._stdout.write(
+                "Check overridden to be unconditionally successful"
+            )
+            self._ended = time.time()
 
         return retval
 
@@ -161,12 +188,16 @@ class Task:  # pylint: disable=R0902
         """int or None: The exit code for the process.
 
         * ``None``:  The Task hasn't processed the execution status yet.
-        * Positive ``int``: The exit status of the check.  To be valid
+        * ``int``: The exit status of the check.  To be valid
             with the Nagios API this must be in the range 0-3.
         * Negative ``int``: The nagios check exited with a signal.  The abs()
             value of this is the signal that it terminated with.
         """
-        return self._child.returncode if self._child else None
+        if self._check.fake:
+            retval = 0
+        else:
+            retval = self._child.returncode if self._child else None
+        return retval
 
     @property
     def check(self):

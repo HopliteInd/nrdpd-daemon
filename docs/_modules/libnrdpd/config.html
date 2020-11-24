@@ -54,7 +54,6 @@
 <span class="kn">import</span> <span class="nn">configparser</span>
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">io</span>
-<span class="kn">import</span> <span class="nn">ipaddress</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">re</span>
@@ -99,6 +98,8 @@
         <span class="n">frequency</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fake_it</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_timeout</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">min_float_val</span><span class="p">(</span><span class="n">timeout</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;timeout&quot;</span><span class="p">)</span>
@@ -112,7 +113,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;str: Name of the check (read only).</span>
+        <span class="sd">&quot;&quot;&quot;str: Read only. Name of the check.</span>
 
 <span class="sd">        This value is the same as is in the nagios config file.  It&#39;s case</span>
 <span class="sd">        sensitive and can only be set during object creation.</span>
@@ -122,7 +123,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">timeout</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;float: How long to run execute the check for before going CRITICAL.</span>
+        <span class="sd">&quot;&quot;&quot;float: Read only. Execution time before timeout and going CRITICAL.</span>
 
 <span class="sd">        Once this time value has been hit, the individual check process</span>
 <span class="sd">        is terminated and CRITICAL is reported back to nagios.</span>
@@ -132,17 +133,58 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;float: The check should run every X seconds.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;float: Read only. The check should run every X seconds.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_frequency</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">command</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;list of str: A &#39;new&#39; list of the command to run.</span>
+        <span class="sd">&quot;&quot;&quot;list of str: Read only. A &#39;new&#39; list of the command to run.</span>
 
 <span class="sd">        Any template variables have not been filled out yet.  See</span>
 <span class="sd">        :class:`libnrdpd.task.Task` for handling of templates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_command</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fake</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;bool: Send fake successful results.  This is to allow overriding</span>
+<span class="sd">        of templates where the template may be invalid for a host.  For</span>
+<span class="sd">        instance it allows you to generically check disk space on /var/log</span>
+<span class="sd">        but if a host doesn&#39;t have that partition, you can send a fake</span>
+<span class="sd">        success in to bypass it.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fake_it</span>
+
+    <span class="nd">@fake</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fake</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+                <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">VALUE_ERROR</span><span class="p">,</span>
+                <span class="s2">&quot;[check:</span><span class="si">%s</span><span class="s2">] fake must be a boolean&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fake_it</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">host</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;str or None: Override the host on a per check basis.</span>
+<span class="sd">        This allows you to override the hostname for a given check.  This</span>
+<span class="sd">        doesn&#39;t override the hostname the check is being submitted to,</span>
+<span class="sd">        but instead allows you to use the hostname in a template variable</span>
+<span class="sd">        with the check.</span>
+
+<span class="sd">        For instance if you have a web server with a virtual host, you can</span>
+<span class="sd">        define the virtual host here to use in the check command line.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_host</span>
+
+    <span class="nd">@host</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+                <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">VALUE_ERROR</span><span class="p">,</span>
+                <span class="s2">&quot;[check:</span><span class="si">%s</span><span class="s2">] host must be a str or None&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="n">value</span></div>
 
 
 <div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../libnrdpd.config.html#libnrdpd.config.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">:</span>  <span class="c1"># pylint: disable=R0902</span>
@@ -278,25 +320,10 @@
         <span class="c1"># Depends on the upper to to validate that &quot;[config]&quot; exists.</span>
         <span class="c1"># Ternary operator handles &quot;&quot; as well as None when evaluating</span>
         <span class="c1"># True.</span>
-        <span class="n">hostname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hostname&quot;</span><span class="p">)</span>
+        <span class="n">hostname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span> <span class="o">=</span> <span class="n">hostname</span> <span class="k">if</span> <span class="n">hostname</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span>
         <span class="n">cacert</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cacert&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cacert</span> <span class="o">=</span> <span class="n">cacert</span> <span class="k">if</span> <span class="n">cacert</span> <span class="k">else</span> <span class="kc">None</span>
-
-        <span class="n">ip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ip&quot;</span><span class="p">)</span>  <span class="c1"># pylint: disable=C0103</span>
-        <span class="k">if</span> <span class="n">ip</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">test</span> <span class="o">=</span> <span class="n">ipaddress</span><span class="o">.</span><span class="n">ip_address</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
-                    <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">TYPE_ERROR</span><span class="p">,</span>
-                    <span class="s2">&quot;[config]-&gt;ip invalid IP: </span><span class="si">%s</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">err</span><span class="p">),</span>
-                <span class="p">)</span> <span class="kn">from</span> <span class="nn">None</span>
-
-            <span class="k">if</span> <span class="n">test</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_ip</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">test</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_ip</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">IP</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">test</span><span class="o">.</span><span class="n">compressed</span><span class="p">)</span>
 
         <span class="c1"># Validate values</span>
         <span class="k">for</span> <span class="n">server</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_servers</span><span class="p">:</span>
@@ -332,8 +359,21 @@
             <span class="n">timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;timeout&quot;</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)</span>
             <span class="n">frequency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;frequency&quot;</span><span class="p">,</span> <span class="mf">60.0</span><span class="p">)</span>
             <span class="n">command</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_req_opt</span><span class="p">(</span><span class="n">section</span><span class="p">,</span> <span class="s2">&quot;command&quot;</span><span class="p">,</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">)</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;enable&quot;</span><span class="p">)</span>
+            <span class="n">host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">host</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+                <span class="n">host</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">_checks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Check</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">frequency</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">state</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;enable&quot;</span><span class="p">,</span> <span class="s2">&quot;disable&quot;</span><span class="p">,</span> <span class="s2">&quot;fake&quot;</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="n">error</span><span class="o">.</span><span class="n">ConfigError</span><span class="p">(</span>
+                    <span class="n">error</span><span class="o">.</span><span class="n">Err</span><span class="o">.</span><span class="n">VALUE_ERROR</span><span class="p">,</span>
+                    <span class="s2">&quot;check [</span><span class="si">%s</span><span class="s2">] state is invalid&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">section</span><span class="p">),</span>
+                <span class="p">)</span> <span class="kn">from</span> <span class="nn">None</span>
+
+            <span class="k">if</span> <span class="n">state</span> <span class="o">!=</span> <span class="s2">&quot;disable&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_checks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">Check</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">frequency</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_checks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">fake</span> <span class="o">=</span> <span class="n">state</span> <span class="o">==</span> <span class="s2">&quot;fake&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_checks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">checks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -394,9 +434,9 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Components:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../nrdpd.html">nrdpd Service</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../libnrdpd.html">libnrdpd</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../configuration.html">Configuration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../nrdpd.html">nrdpd</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../libnrdpd.html">libnrdpd</a></li>
 </ul>
 
 <div class="relations">

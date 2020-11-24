@@ -41,6 +41,12 @@ def test_config_valid_overrides():
             assert check.timeout == 15.0
             assert check.frequency == 120.0
 
+        if name == "test2":
+            assert check.fake
+
+        # Disabled.  Should never show up under the checks at all.
+        assert name != "test3"
+
 
 # Test loading valid minimally viable product config file.
 def test_config_valid_mvp():

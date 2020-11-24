@@ -61,6 +61,7 @@ class Schedule:
         Run in a loop forever executing checks and submitting them.
         """
         log = logging.getLogger("%s.Schedule.loop" % __name__)
+        log.debug("Start main loop")
         self.sort()
 
         while True:
@@ -98,8 +99,11 @@ class Schedule:
             now = time.time()
             while self._queue and self._queue[0].start < now:
                 task = self._queue[0]
+                log.info("Starting check: %s", task.check.name)
                 self._running[task.check.name] = task
-                template = {"host": self._cfg.host, "ip": self._cfg.ip}
+                host = task.check.host if task.check.host else self._cfg.host
+                template = {"host": host}
+                log.debug("Template variables: %s", repr(template))
                 task.run(**template)
                 self.sort()
 
@@ -111,4 +115,7 @@ class Schedule:
                 now = time.time()
                 sleepytime = self._queue[0].start - now
                 if sleepytime > 0:
+                    log.debug(
+                        "sleeping %0.2f till next scheduled job", sleepytime
+                    )
                     time.sleep(sleepytime)

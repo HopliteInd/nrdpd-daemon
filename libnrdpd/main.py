@@ -87,7 +87,7 @@ def parse_args():
         default=session_id,
         help="Specify a session id for syslog logging",
     )
-    if platofrm.system() != "Windows":
+    if platform.system() != "Windows":
         parser.add_argument(
             "-p",
             "--pid-file",

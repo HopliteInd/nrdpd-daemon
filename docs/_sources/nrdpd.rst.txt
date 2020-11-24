@@ -1,14 +1,9 @@
-nrdpd Service
-=============
+nrdpd
+=====
 
-.. toctree::
-    :maxdepth: 1
-
-
-Core library for the nrdpd daemon.
+The nrdpd script is designed to be run as a service for your platform.  You can
+check out the :ref:`Configuration Guide <service>` for specifics how to accomplish
+that.
 
 
-.. todo:: Add creating service in windows
-
-.. todo:: Add creating service in linux
 

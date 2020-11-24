@@ -66,7 +66,7 @@ it and reporting CRITICAL due to timeout.</p></li>
 <dl class="py method">
 <dt id="libnrdpd.config.Check.command">
 <em class="property">property </em><code class="sig-name descname">command</code><a class="headerlink" href="#libnrdpd.config.Check.command" title="Permalink to this definition">¶</a></dt>
-<dd><p>A ‘new’ list of the command to run.</p>
+<dd><p>Read only. A ‘new’ list of the command to run.</p>
 <p>Any template variables have not been filled out yet.  See
 <a class="reference internal" href="libnrdpd.task.html#libnrdpd.task.Task" title="libnrdpd.task.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">libnrdpd.task.Task</span></code></a> for handling of templates.</p>
 <dl class="field-list simple">
@@ -77,9 +77,24 @@ it and reporting CRITICAL due to timeout.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt id="libnrdpd.config.Check.fake">
+<em class="property">property </em><code class="sig-name descname">fake</code><a class="headerlink" href="#libnrdpd.config.Check.fake" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send fake successful results.  This is to allow overriding
+of templates where the template may be invalid for a host.  For
+instance it allows you to generically check disk space on /var/log
+but if a host doesn’t have that partition, you can send a fake
+success in to bypass it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="libnrdpd.config.Check.frequency">
 <em class="property">property </em><code class="sig-name descname">frequency</code><a class="headerlink" href="#libnrdpd.config.Check.frequency" title="Permalink to this definition">¶</a></dt>
-<dd><p>The check should run every X seconds.</p>
+<dd><p>Read only. The check should run every X seconds.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float</p>
@@ -88,9 +103,26 @@ it and reporting CRITICAL due to timeout.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt id="libnrdpd.config.Check.host">
+<em class="property">property </em><code class="sig-name descname">host</code><a class="headerlink" href="#libnrdpd.config.Check.host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override the host on a per check basis.
+This allows you to override the hostname for a given check.  This
+doesn’t override the hostname the check is being submitted to,
+but instead allows you to use the hostname in a template variable
+with the check.</p>
+<p>For instance if you have a web server with a virtual host, you can
+define the virtual host here to use in the check command line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="libnrdpd.config.Check.name">
 <em class="property">property </em><code class="sig-name descname">name</code><a class="headerlink" href="#libnrdpd.config.Check.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Name of the check (read only).</p>
+<dd><p>Read only. Name of the check.</p>
 <p>This value is the same as is in the nagios config file.  It’s case
 sensitive and can only be set during object creation.</p>
 <dl class="field-list simple">
@@ -103,7 +135,7 @@ sensitive and can only be set during object creation.</p>
 <dl class="py method">
 <dt id="libnrdpd.config.Check.timeout">
 <em class="property">property </em><code class="sig-name descname">timeout</code><a class="headerlink" href="#libnrdpd.config.Check.timeout" title="Permalink to this definition">¶</a></dt>
-<dd><p>How long to run execute the check for before going CRITICAL.</p>
+<dd><p>Read only. Execution time before timeout and going CRITICAL.</p>
 <p>Once this time value has been hit, the individual check process
 is terminated and CRITICAL is reported back to nagios.</p>
 <dl class="field-list simple">
@@ -229,7 +261,8 @@ domain name add it to the config file.</p>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Components:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nrdpd.html">nrdpd</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="libnrdpd.html">libnrdpd</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">libnrdpd.config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="libnrdpd.error.html">libnrdpd.error</a></li>
@@ -240,7 +273,6 @@ domain name add it to the config file.</p>
 <li class="toctree-l2"><a class="reference internal" href="libnrdpd.util.html">libnrdpd.util</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="configuration.html">Configuration Guide</a></li>
 </ul>
 
 <div class="relations">
