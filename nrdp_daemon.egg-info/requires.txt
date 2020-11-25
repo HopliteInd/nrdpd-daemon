@@ -1,2 +1,3 @@
-pywin32>=1.0
-plaform_system=='Windows'
+
+[:sys_platform == "win32"]
+pywin32>1.0
