@@ -180,7 +180,8 @@ class Config:  # pylint: disable=R0902
         self._servers = []  # List of servers to publish to
         self._token = None  # Server authentication token
         # Default hostname comes from socket
-        self._hostname = socket.gethostname().split(".")[0]
+        self._fqdn = socket.gethostname()
+        self._hostname = self._fqdn.split(".")[0]
         self._cacert = None
         self._ip = util.getip()
 
@@ -289,6 +290,8 @@ class Config:  # pylint: disable=R0902
         # True.
         hostname = self._cp["config"].get("host")
         self._hostname = hostname if hostname else self._hostname
+        fqdn = self._cp["config"].get("fqdn")
+        self._fqdn = fqdn if fqdn else self._fqdn
         cacert = self._cp["config"].get("cacert")
         self._cacert = cacert if cacert else None
 
@@ -371,6 +374,11 @@ class Config:  # pylint: disable=R0902
         domain name add it to the config file.
         """
         return str(self._hostname)
+
+    @property
+    def fqdn(self):
+        """str: FQDN for inclusion in check varible substitution."""
+        return str(self._fqdn)
 
     @property
     def ip(self):  # pylint: disable=C0103

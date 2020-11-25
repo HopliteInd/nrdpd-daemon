@@ -106,7 +106,7 @@ class Schedule:
                 log.info("Starting check: %s", task.check.name)
                 self._running[task.check.name] = task
                 host = task.check.host if task.check.host else self._cfg.host
-                template = {"host": host}
+                template = {"host": host, "fqdn": self._cfg.fqdn}
                 log.debug("Template variables: %s", repr(template))
                 task.run(**template)
                 self.sort()

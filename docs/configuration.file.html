@@ -59,8 +59,9 @@ other sections (templating).</p>
 <span class="k">[config]</span>
 <span class="na">servers</span> <span class="o">=</span> <span class="s">https://nagios.example.com/nrdp</span>
 <span class="na">token</span> <span class="o">=</span> <span class="s">SuperSecretToken</span>
-<span class="na">host</span> <span class="o">=</span> <span class="s">webserver.example.com</span>
+<span class="na">host</span> <span class="o">=</span> <span class="s">webserver</span>
 <span class="na">cacert</span> <span class="o">=</span> <span class="s">/etc/pki/tls/certs/example.com.CA.crt</span>
+<span class="na">fqdn</span> <span class="o">=</span> <span class="s">webserver.example.com</span>
 
 <span class="k">[check:test]</span>
 <span class="na">command</span> <span class="o">=</span> <span class="s">sh -c &quot;echo &#39;Warning the sky is falling&#39;; exit 1&quot;</span>
@@ -120,6 +121,13 @@ a blank value.</p>
 <span class="na">host</span> <span class="o">=</span> <span class="s">webserver</span>
 </pre></div>
 </div>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><strong>fqdn</strong>: <em>optional</em> This is the fully qualified domain name of the host.</dt><dd><p>You’ll want to set this if you are checking SSL certificates.  Default
+is to use what comes back from gethostname().  Many people use short names
+for this value, so it may not default to the FQDN.</p>
 </dd>
 </dl>
 </li>

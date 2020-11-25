@@ -33,8 +33,9 @@ other sections (templating).
     [config]
     servers = https://nagios.example.com/nrdp
     token = SuperSecretToken
-    host = webserver.example.com
+    host = webserver
     cacert = /etc/pki/tls/certs/example.com.CA.crt
+    fqdn = webserver.example.com
 
     [check:test]
     command = sh -c "echo 'Warning the sky is falling'; exit 1"
@@ -91,6 +92,10 @@ nrdpd are set.  The valid options are:
         ; Override [DEFAULT] with the short name
         host = webserver
 
+* **fqdn**: *optional* This is the fully qualified domain name of the host.
+    You'll want to set this if you are checking SSL certificates.  Default
+    is to use what comes back from gethostname().  Many people use short names
+    for this value, so it may not default to the FQDN.
 * **cacert**: *optional* If your nrdp endpoint is available via ``https`` and
     you don't have a public cert you may have to pass in the path to a valid
     x509 CA certificate in PEM format.
