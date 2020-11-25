@@ -24,7 +24,6 @@ import time
 
 # Local imports
 from . import config
-from . import error
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())

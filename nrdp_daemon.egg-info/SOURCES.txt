@@ -8,6 +8,7 @@ setup.cfg
 setup.py
 tox.ini
 doc-src/conf.py
+doc-src/configuration.file.rst
 doc-src/configuration.rst
 doc-src/index.rst
 doc-src/libnrdpd.config.rst
