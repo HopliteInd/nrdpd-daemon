@@ -184,7 +184,7 @@ class Config:  # pylint: disable=R0902
         self._cacert = None
         self._ip = util.getip()
 
-        self._cp = configparser.ConfigParser()
+        self._cp = configparser.ConfigParser(interpolation=None)
         self._check_re = re.compile("^[-: a-zA-Z0-9]+")
 
         self._checks = {}  # Dictionry of checks.  key = name, value = Check
