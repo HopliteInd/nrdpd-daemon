@@ -1,6 +1,6 @@
 Metadata-Version: 1.2
 Name: nrdp-daemon
-Version: 1.0.9
+Version: 1.0.10
 Summary: Nagios Remote Data Processing Daemon
 Home-page: https://github.com/HopliteInd/nrdpd-daemon
 Author: Hoplite Industries, Inc.

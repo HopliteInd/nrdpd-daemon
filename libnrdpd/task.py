@@ -21,12 +21,41 @@ import shlex
 import string
 import subprocess
 import time
+import typing
 
 # Local imports
 from . import config
+from . import error
 
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+
+class _FakeChild:
+    """In the event of an error we may need a fake popen process."""
+
+    def __init__(
+        self,
+        code: int,
+        stdout: typing.Optional[str] = None,
+        stderr: typing.Optional[str] = None,
+    ):
+        self._code = code
+        self._stdout = stdout.encode("utf-8") if stdout is not None else None
+        self._stderr = stderr.encode("utf-8") if stderr is not None else None
+
+    @property
+    def returncode(self):
+        """Return code interface for Popen."""
+        return self._code
+
+    def poll(self):
+        """Imply the child has finished."""
+        return self._code
+
+    def communicate(self, *args, **kwargs):  # pylint: disable=W0613
+        """Return stdout, stderr same as Popen."""
+        return (self._stdout, self._stderr)
 
 
 class Task:  # pylint: disable=R0902
@@ -80,10 +109,14 @@ class Task:  # pylint: disable=R0902
         log = logging.getLogger("%s.run" % __name__)
 
         self.reset_start()
+        self._began = time.time()
+        self._running = True
         if self._check.fake:
-            self._child = True
-            self._began = time.time()
             log.info("Faking check: %s", self._check.name)
+            self._child = _FakeChild(
+                error.Status.OK.value,
+                stdout="Check overridden to be unconditionally successful",
+            )
         else:
             # Apply template variables
             cmd = []
@@ -104,18 +137,15 @@ class Task:  # pylint: disable=R0902
                     stderr=subprocess.PIPE,
                     close_fds=True,
                 )
-                self._running = True
-                self._began = time.time()
             except OSError as err:
                 log.error(
                     "Unable to run [check:%s]: %s", self._check.name, err
                 )
-                self._stderr.write(
-                    "Unable to execute [check:%s]: %s"
-                    % (self._check.name, err)
+                self._child = _FakeChild(
+                    error.Status.CRITICAL.value,
+                    stdout="Unable to execute [check:%s]: %s"
+                    % (self._check.name, err),
                 )
-                self._began = time.time()
-                self._ended = time.time()
 
     def reset_start(self):
         """Set start time for the NEXT check.
@@ -149,14 +179,20 @@ class Task:  # pylint: disable=R0902
         check of this value will initiate an output check and process that
         output of any was found.
         """
-        retval = True
         if self._child and self._running:
             status = self._child.poll()
-            retval = status is not None
-            self._running = retval
+            if status is not None:
+                self._running = False
+                self._ended = time.time()
 
             try:
-                stdout, stderr = self._child.communicate(timeout=0.01)
+                try:
+                    stdout, stderr = self._child.communicate(timeout=0.01)
+                except ValueError:
+                    # Handle Python 3.6 bug in communicate after child exited.
+                    stdout = None
+                    stderr = None
+
                 if stdout:
                     self._stdout.write(
                         stdout.decode("utf-8", errors="replace")
@@ -171,16 +207,8 @@ class Task:  # pylint: disable=R0902
             if self._running:
                 if self.expired:
                     self._child.kill()
-            else:
-                # Process just terminated, so record those things...
-                self._ended = time.time()
-        elif self._check.fake:
-            self._stdout.write(
-                "Check overridden to be unconditionally successful"
-            )
-            self._ended = time.time()
 
-        return retval
+        return not self._running
 
     @property
     def status(self):
@@ -192,11 +220,7 @@ class Task:  # pylint: disable=R0902
         * Negative ``int``: The nagios check exited with a signal.  The abs()
             value of this is the signal that it terminated with.
         """
-        if self._check.fake:
-            retval = 0
-        else:
-            retval = self._child.returncode if self._child else None
-        return retval
+        return self._child.returncode if self._child else None
 
     @property
     def check(self):

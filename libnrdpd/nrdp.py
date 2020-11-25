@@ -18,6 +18,7 @@ import json
 import logging
 import urllib.error
 import urllib.request
+import urllib.parse
 
 # Local imports
 from . import config
@@ -84,16 +85,10 @@ def submit(cfg: config.Config, task: tasklib.Task):
     check_results = {
         "checkresults": [
             {
-                "checkresult": {"type": "host"},
-                "hostname": cfg.host,
-                "state": "0",
-                "output": "Host alive enough to send this",
-            },
-            {
                 "checkresult": {"type": "service"},
                 "hostname": cfg.host,
                 "servicename": task.check.name,
-                "state": str(code),
+                "state": code.value,
                 "output": message,
             },
         ]
@@ -104,10 +99,11 @@ def submit(cfg: config.Config, task: tasklib.Task):
         "token": cfg.token,
         "json": json.dumps(check_results),
     }
+    data = urllib.parse.urlencode(payload).encode("utf-8")
 
     for url in cfg.servers:
         try:
-            req = urllib.request.urlopen(url, timeout=60, data=payload)
+            req = urllib.request.urlopen(url, timeout=60, data=data)
 
             httpstatus = req.getcode()
             if httpstatus != 200:

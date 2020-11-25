@@ -17,6 +17,7 @@
 import json
 import logging
 import time
+import traceback
 
 # Local imports
 from . import config
@@ -78,7 +79,7 @@ class Schedule:
                     event = {
                         "check": task.check.name,
                         "started": task.began,
-                        "elapsed": task.ended - task.began,
+                        "elapsed": task.elapsed,
                         "status": task.status,
                         "timeout": task.expired,
                     }
@@ -87,6 +88,9 @@ class Schedule:
                     try:
                         nrdp.submit(self._cfg, task)
                     except Exception as err:  # pylint: disable=W0703
+                        lines = traceback.format_exc().splitlines()
+                        for line in lines:
+                            log.error(line)
                         log.error("Submission error: %s", err)
 
                     task.reset()
