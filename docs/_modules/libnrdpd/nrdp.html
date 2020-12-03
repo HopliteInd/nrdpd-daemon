@@ -136,7 +136,7 @@
 
     <span class="k">for</span> <span class="n">url</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">servers</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">req</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">req</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">cafile</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">cacert</span><span class="p">)</span>
 
             <span class="n">httpstatus</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">getcode</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">httpstatus</span> <span class="o">!=</span> <span class="mi">200</span><span class="p">:</span>

@@ -290,10 +290,13 @@ class Config:  # pylint: disable=R0902
         # True.
         hostname = self._cp["config"].get("host")
         self._hostname = hostname if hostname else self._hostname
+        log.debug("Hostname: %s", self._hostname)
         fqdn = self._cp["config"].get("fqdn")
         self._fqdn = fqdn if fqdn else self._fqdn
+        log.debug("FQDN: %s", self._fqdn)
         cacert = self._cp["config"].get("cacert")
         self._cacert = cacert if cacert else None
+        log.debug("CA Certificate: %s", self._cacert)
 
         # Validate values
         for server in self._servers:

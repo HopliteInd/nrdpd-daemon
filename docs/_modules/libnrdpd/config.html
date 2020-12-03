@@ -323,10 +323,13 @@
         <span class="c1"># True.</span>
         <span class="n">hostname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;host&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span> <span class="o">=</span> <span class="n">hostname</span> <span class="k">if</span> <span class="n">hostname</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Hostname: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hostname</span><span class="p">)</span>
         <span class="n">fqdn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;fqdn&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fqdn</span> <span class="o">=</span> <span class="n">fqdn</span> <span class="k">if</span> <span class="n">fqdn</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fqdn</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;FQDN: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fqdn</span><span class="p">)</span>
         <span class="n">cacert</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cp</span><span class="p">[</span><span class="s2">&quot;config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cacert&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cacert</span> <span class="o">=</span> <span class="n">cacert</span> <span class="k">if</span> <span class="n">cacert</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;CA Certificate: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cacert</span><span class="p">)</span>
 
         <span class="c1"># Validate values</span>
         <span class="k">for</span> <span class="n">server</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_servers</span><span class="p">:</span>
@@ -410,9 +413,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fqdn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;str: FQDN for inclusion in check varible substitution.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;str: FQDN for inclusion in check varible substitution.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fqdn</span><span class="p">)</span>
 
     <span class="nd">@property</span>

@@ -103,7 +103,7 @@ def submit(cfg: config.Config, task: tasklib.Task):
 
     for url in cfg.servers:
         try:
-            req = urllib.request.urlopen(url, timeout=60, data=data)
+            req = urllib.request.urlopen(url, timeout=60, data=data, cafile=cfg.cacert)
 
             httpstatus = req.getcode()
             if httpstatus != 200:
