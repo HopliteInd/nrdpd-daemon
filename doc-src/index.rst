@@ -1,5 +1,5 @@
-Nagios Remote Data Protocol Daemon
-==================================
+Nagios Remote Data Processor Daemon
+===================================
 
 The ``nrdpd`` program is used as a passive monitoring agent for Nagios.  It
 will use regular Nagios plugins to perform system checks and submit those
