@@ -50,8 +50,8 @@ dialog.  Click on the ``Environment Variables`` button near the bottom.
 You'll want to edit the ``Path`` variable.  Using Python version 3.8 as an
 example, you'll need to make sure that the following are in the Path:
 
-* ``C:\\Program Files\\Python38``
-* ``C:\\Program Files\\Python38\\Scripts``
+* ``C:\Program Files\Python38``
+* ``C:\Program Files\Python38\Scripts``
 
 
 
