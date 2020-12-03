@@ -13,19 +13,23 @@
 """Shutup"""
 
 import os
+import os.path
 import sys
+import configparser
 
 sys.path.insert(0, os.path.abspath(os.pardir))
 
+cp = configparser.ConfigParser()
+cp.read(os.path.join("..", "setup.cfg"))
 
 # -- Project information -----------------------------------------------------
 
-project = "libnrdpd"
+project = "Nagios Remote Data Processor Daemon"
 copyright = "2020, Hoplite Industries, Inc."  # noqa: A001
 author = "Shawn Michael"
 
 # The full version, including alpha/beta/rc tags
-release = "1.0"
+release = cp.get("metadata", "version")
 
 
 # -- General configuration ---------------------------------------------------

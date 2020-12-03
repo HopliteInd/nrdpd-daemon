@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Nagios Remote Data Protocol Daemon &#8212; libnrdpd 1.0 documentation</title>
+    <title>Nagios Remote Data Protocol Daemon &#8212; Nagios Remote Data Processor Daemon 1.0.12 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
@@ -61,6 +61,40 @@ you can integrate with.</p>
 </ul>
 </div>
 </div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<p>The nrdpd-daemon software can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span></code> or doing a manual
+install from source. You can download the source from
+<a class="reference external" href="https://pypi.org/project/nrdp-daemon/#files">PyPi</a> or
+<a class="reference external" href="https://github.com/HopliteInd/nrdpd-daemon/releases/">GitHub</a>.</p>
+<div class="literal-block-wrapper docutils container" id="id1">
+<div class="code-block-caption"><span class="caption-text">System installation via pip</span><a class="headerlink" href="#id1" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install nrdp-daemon
+</pre></div>
+</div>
+</div>
+<p>If you want to test it out as a user prior to polluting your system:</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">User installation via pip</span><a class="headerlink" href="#id2" title="Permalink to this code">¶</a></div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --user nrdp-daemon
+</pre></div>
+</div>
+</div>
+<div class="section" id="windows-notes">
+<h2>Windows Notes<a class="headerlink" href="#windows-notes" title="Permalink to this headline">¶</a></h2>
+<p>In windows you may need to add the Python paths to your <code class="docutils literal notranslate"><span class="pre">Path</span></code>.  To do
+this run the windows search for <code class="docutils literal notranslate"><span class="pre">environment</span></code>. Click on the <strong>Edit the
+system environment variables</strong> option.  You’ll need to run this as
+an adminstrative user.  This should bring up the <strong>System Properties</strong>
+dialog.  Click on the <code class="docutils literal notranslate"><span class="pre">Environment</span> <span class="pre">Variables</span></code> button near the bottom.</p>
+<p>You’ll want to edit the <code class="docutils literal notranslate"><span class="pre">Path</span></code> variable.  Using Python version 3.8 as an
+example, you’ll need to make sure that the following are in the Path:</p>
+<ul class="simple">
+<li><p>C:Program FilesPython38</p></li>
+<li><p>C:Program FilesPython38Scripts</p></li>
+</ul>
+</div>
+</div>
 
 
           </div>
@@ -69,7 +103,7 @@ you can integrate with.</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="#">libnrdpd</a></h1>
+<h1 class="logo"><a href="#">Nagios Remote Data Processor Daemon</a></h1>
 
 
 
