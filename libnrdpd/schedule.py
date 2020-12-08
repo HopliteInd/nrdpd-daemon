@@ -65,6 +65,8 @@ class Schedule:
         log.debug("Start main loop")
         self.sort()
 
+        host_last_sent = time.time() - 3600
+
         while True:
             # Only re-order queue on changes in status
             changed = False
@@ -84,9 +86,16 @@ class Schedule:
                         "timeout": task.expired,
                     }
 
+                    # Attempt to send host checks every minute or so
+                    send_host = False
+                    now = time.time()
+                    if (now - host_last_sent) >= 58.0:
+                        send_host = True
+                        host_last_sent = now
+
                     log.error("Task complete: %s", json.dumps(event))
                     try:
-                        nrdp.submit(self._cfg, task)
+                        nrdp.submit(self._cfg, task, send_host=send_host)
                     except Exception as err:  # pylint: disable=W0703
                         lines = traceback.format_exc().splitlines()
                         for line in lines:

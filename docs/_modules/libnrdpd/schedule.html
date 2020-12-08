@@ -4,7 +4,7 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>libnrdpd.schedule &#8212; Nagios Remote Data Processor Daemon 1.0.12 documentation</title>
+    <title>libnrdpd.schedule &#8212; Nagios Remote Data Processor Daemon 1.0.13 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
@@ -98,6 +98,8 @@
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Start main loop&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
+        <span class="n">host_last_sent</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="mi">3600</span>
+
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
             <span class="c1"># Only re-order queue on changes in status</span>
             <span class="n">changed</span> <span class="o">=</span> <span class="kc">False</span>
@@ -117,9 +119,16 @@
                         <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">expired</span><span class="p">,</span>
                     <span class="p">}</span>
 
+                    <span class="c1"># Attempt to send host checks every minute or so</span>
+                    <span class="n">send_host</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">now</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">now</span> <span class="o">-</span> <span class="n">host_last_sent</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">58.0</span><span class="p">:</span>
+                        <span class="n">send_host</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">host_last_sent</span> <span class="o">=</span> <span class="n">now</span>
+
                     <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Task complete: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">event</span><span class="p">))</span>
                     <span class="k">try</span><span class="p">:</span>
-                        <span class="n">nrdp</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+                        <span class="n">nrdp</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">task</span><span class="p">,</span> <span class="n">send_host</span><span class="o">=</span><span class="n">send_host</span><span class="p">)</span>
                     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable=W0703</span>
                         <span class="n">lines</span> <span class="o">=</span> <span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
                         <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>

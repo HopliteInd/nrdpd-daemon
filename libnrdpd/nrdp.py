@@ -28,7 +28,7 @@ from . import task as tasklib
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def submit(cfg: config.Config, task: tasklib.Task):
+def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
     """Submit a completed task to nagios via nrdp.
 
     This will submit the request to all servers in the servers
@@ -38,6 +38,8 @@ def submit(cfg: config.Config, task: tasklib.Task):
         cfg (libnrdpd.config.Config): libnrdpd Config object
         task (:class:`libnrdpd.task.Task`): Completed task that needs to
             be sent to the central nagios server.
+
+        send_host: If ``True`` send a host check result as well.
 
     Raises:
         :class:`libnrdpd.error.NotComplete`: Raised when an uncompleted
@@ -94,6 +96,16 @@ def submit(cfg: config.Config, task: tasklib.Task):
         ]
     }
 
+    if send_host:
+        check_results["checkresults"].append(
+            {
+                "checkresult": {"type": "host"},
+                "hostname": cfg.host,
+                "state": "0",
+                "output": "Host alive",
+            }
+        )
+
     payload = {
         "cmd": "submitcheck",
         "token": cfg.token,
@@ -103,7 +115,9 @@ def submit(cfg: config.Config, task: tasklib.Task):
 
     for url in cfg.servers:
         try:
-            req = urllib.request.urlopen(url, timeout=60, data=data, cafile=cfg.cacert)
+            req = urllib.request.urlopen(
+                url, timeout=60, data=data, cafile=cfg.cacert
+            )
 
             httpstatus = req.getcode()
             if httpstatus != 200:
