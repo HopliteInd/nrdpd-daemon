@@ -179,30 +179,35 @@ class Task:  # pylint: disable=R0902
         check of this value will initiate an output check and process that
         output of any was found.
         """
+        log = logging.getLogger("%s.complete" % __name__)
         if self._child and self._running:
+            try:
+                stdout, stderr = self._child.communicate(timeout=0.01)
+            except ValueError:
+                # Handle Python 3.6 bug in communicate after child exited.
+                stdout = None
+                stderr = None
+            except subprocess.TimeoutExpired:
+                log.debug("Timeout waiting....")
+                return False
+
             status = self._child.poll()
             if status is not None:
                 self._running = False
                 self._ended = time.time()
 
-            try:
-                try:
-                    stdout, stderr = self._child.communicate(timeout=0.01)
-                except ValueError:
-                    # Handle Python 3.6 bug in communicate after child exited.
-                    stdout = None
-                    stderr = None
-
-                if stdout:
-                    self._stdout.write(
-                        stdout.decode("utf-8", errors="replace")
-                    )
-                if stderr:
-                    self._stderr.write(
-                        stderr.decode("utf-8", errors="replace")
-                    )
-            except subprocess.TimeoutExpired:
-                pass
+            if stdout:
+                log.debug(
+                    "stdout found: %s"
+                    % (stdout.decode("utf-8", errors="replace"))
+                )
+                self._stdout.write(stdout.decode("utf-8", errors="replace"))
+            if stderr:
+                log.debug(
+                    "stderr found: %s"
+                    % (stderr.decode("utf-8", errors="replace"))
+                )
+                self._stderr.write(stderr.decode("utf-8", errors="replace"))
 
             if self._running:
                 if self.expired:

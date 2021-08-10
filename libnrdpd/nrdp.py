@@ -80,6 +80,7 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
             try:
                 code = error.Status(task.status)
                 message = task.stdout
+                log.debug("STDOUT: %s" % task.stdout)
             except ValueError:
                 code = error.Status.CRITICAL
                 message = "Check exited with unknown code: %d" % (task.status)
@@ -112,6 +113,7 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
         "json": json.dumps(check_results),
     }
     data = urllib.parse.urlencode(payload).encode("utf-8")
+    log.debug("payload = %s", repr(payload))
 
     for url in cfg.servers:
         try:
