@@ -234,6 +234,8 @@ def getip():
         v4addr = str(test)
         break
 
+    log.debug("Chosen IPs: %s %s", v6addr, v4addr)
+
     return IP(v4addr, v6addr)
 
 
