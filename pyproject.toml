@@ -43,11 +43,23 @@ Homepage = "https://github.com/HopliteInd/nrdpd-daemon"
 [tool.hatch.version]
 path = "libnrdpd/__about__.py"
 
+[tool.hatch.build.targets.wheel]
+include = [
+  "libnrdpd/*.py",
+  "*.txt",
+  "*.rst",
+]
+exclude = []
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/libnrdpd",
+  "libnrdpd/*.py",
+  "*.txt",
+  "*.rst",
 ]
+exclude = []
+
+
 
 [tool.hatch.metadata.hooks.requirements_txt]
 files = ["requirements-3rdparty.txt", "requirements-hoplite.txt"]
