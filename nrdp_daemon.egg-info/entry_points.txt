@@ -1,3 +1,0 @@
-[console_scripts]
-nrdpd = libnrdpd.main:start
-

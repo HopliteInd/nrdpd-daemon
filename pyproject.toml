@@ -1,3 +1,58 @@
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nrdp-daemon"
+description = "Nagios Remote Data Processor Daemon"
+readme = "README.rst"
+requires-python = ">=3.7"
+license_file = "LICENSE.txt"
+authors = [
+    { name = "Hoplite Industries, Inc.", email="smichael@hopliteindustries.com" },
+]
+keywords = [
+    "nagios",
+    "nrdp",
+    "passive",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: No Input/Output (Daemon)",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Monitoring",
+]
+dependencies = [
+    "pywin32>1.0;sys_platform=='win32'",
+]
+dynamic = ["version", "dependencies"]
+
+[project.scripts]
+nrdpd = "libnrdpd.main:start"
+
+[project.urls]
+Homepage = "https://github.com/HopliteInd/nrdpd-daemon"
+
+[tool.hatch.version]
+path = "libnrdpd/__about__.py"
+
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/libnrdpd",
+]
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements-3rdparty.txt", "requirements-hoplite.txt"]
+
+
 [tool.black]
 line_length = 79
 
