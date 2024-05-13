@@ -29,9 +29,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Topic :: System :: Monitoring",
 ]
-dependencies = [
-    "pywin32>1.0;sys_platform=='win32'",
-]
 dynamic = ["version", "dependencies"]
 
 [project.scripts]
