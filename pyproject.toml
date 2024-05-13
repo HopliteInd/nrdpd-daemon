@@ -9,7 +9,10 @@ readme = "README.rst"
 requires-python = ">=3.7"
 license_file = "LICENSE.txt"
 authors = [
-    { name = "Hoplite Industries, Inc.", email="smichael@hopliteindustries.com" },
+    { name = "Hoplite Industries, Inc." },
+]
+maintainers = [
+    { name = "Shawn Michael", email="smichael@hopliteindustries.com" },
 ]
 keywords = [
     "nagios",
