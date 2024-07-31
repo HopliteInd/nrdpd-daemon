@@ -19,10 +19,10 @@ import argparse
 import base64
 import logging
 import logging.handlers
-import os
 import os.path
 import platform
 import sys
+import stat
 import textwrap
 import traceback
 
@@ -31,7 +31,13 @@ from . import config
 from . import schedule
 
 # My name is
-SLIM_SHADY = os.path.basename(sys.argv[0])
+PROGRAM = os.path.basename(sys.argv[0])
+
+# Syslog socket locations. First found is the one used
+SYSLOG_SOCKETS = [
+    "/dev/log",
+    "/var/run/log",
+]
 
 
 def parse_args():
@@ -121,12 +127,12 @@ def parse_args():
 
 def main(opts):
     """Core running logic for the program."""
-    log = logging.getLogger("%s.main" % __name__)
+    log = logging.getLogger(f"{__name__}.main")
     log.debug("Start")
 
     if opts.pidfile:
         try:
-            with open(opts.pidfile, "w") as pidfile:
+            with open(opts.pidfile, "w", encoding="utf-8") as pidfile:
                 pidfile.write(str(os.getpid()))
         except OSError as err:
             log.error("Unable to create pid file: %s", err)
@@ -143,22 +149,28 @@ def start():
     opts = parse_args()
 
     if platform.system() == "Windows":
-        syslog = logging.handlers.NTEventLogHandler(SLIM_SHADY)
+        syslog = logging.handlers.NTEventLogHandler(PROGRAM)
         syslog.setLevel(logging.ERROR)
         formatter = logging.Formatter(
-            "%(name)s[%(process)d]: {session} %(message)s".format(
-                session=opts.session_id
-            )
+            f"%(name)s[%(process)d]: {opts.session_id} %(message)s"
         )
         syslog.setFormatter(formatter)
     else:
+        sock_location = "/dev/log"  # unconditional default
+        for location in SYSLOG_SOCKETS:
+            try:
+                info = os.stat(location, follow_symlinks=True)
+            except FileNotFoundError:
+                continue
+
+            if stat.S_ISSOCK(info.st_mode):
+                sock_location = location
+                break
         # Set up a syslog output stream
-        syslog = logging.handlers.SysLogHandler("/dev/log")
+        syslog = logging.handlers.SysLogHandler(sock_location)
         syslog.setLevel(logging.ERROR)
         formatter = logging.Formatter(
-            "{prog}[%(process)d]: %(name)s {session} %(message)s".format(
-                prog=SLIM_SHADY, session=opts.session_id
-            )
+            f"{PROGRAM}[%(process)d]: %(name)s {opts.session_id} %(message)s"
         )
         syslog.setFormatter(formatter)
 
@@ -194,7 +206,7 @@ def start():
             handlers=[syslog],
         )
 
-    log = logging.getLogger(SLIM_SHADY)
+    log = logging.getLogger(PROGRAM)
     log.setLevel(logging.ERROR)
 
     try:
