@@ -239,6 +239,7 @@ class Config:  # pylint: disable=R0902
             command = self._get_req_opt(section, "command", shlex.split)
             state = util.empty(self._cp[section].get("state"), "enable")
             host = util.empty(self._cp[section].get("host"))
+            hostname = util.empty(self._cp[section].get("hostname"))
             fqdn = util.empty(self._cp[section].get("fqdn"))
             ipaddr = util.empty(self._cp[section].get("ip"))
 
@@ -253,6 +254,7 @@ class Config:  # pylint: disable=R0902
                     name, command, timeout, frequency, self
                 )
                 self._checks[name].fake = state == "fake"
+                self._checks[name].hostname = hostname
                 self._checks[name].host = host
                 self._checks[name].fqdn = fqdn
                 self._checks[name].ip = ipaddr

@@ -20,6 +20,10 @@ def test_config_valid():
     for name, check in cfg.checks.items():
         assert check.timeout == DEF_TIMEOUT
         assert check.frequency == DEF_FREQUENCY
+        if name == "test":
+            assert check.ip == "100.64.127.127"
+            assert check.fqdn == "example.com"
+            assert check.hostname == "example"
 
 
 # Test loading valid config with overrides in conf.d files
@@ -37,12 +41,21 @@ def test_config_valid_overrides():
         if name == "test":
             assert check.timeout == 60.0
             assert check.frequency == 600.0
+            assert check.ip == "100.64.127.127"
+            assert check.fqdn == "example.com"
+            assert check.hostname == "example"
         else:
             assert check.timeout == 15.0
             assert check.frequency == 120.0
+            assert check.ip == "127.0.0.1"
+            assert check.fqdn is None
+            assert check.hostname == "i.love.roses"
 
         if name == "test2":
             assert check.fake
+            assert check.ip == "127.0.0.1"
+            assert check.hostname == "i.love.roses"
+
 
         # Disabled.  Should never show up under the checks at all.
         assert name != "test3"
@@ -65,3 +78,4 @@ def test_config_valid_mvp():
 def test_config_bad_url():
     with pytest.raises(libnrdpd.error.ConfigError):
         libnrdpd.config.Config(os.path.join("config", "config-bad-url.ini"))
+

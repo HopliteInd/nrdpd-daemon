@@ -36,6 +36,7 @@ other sections (templating).
     host = webserver
     cacert = /etc/pki/tls/certs/example.com.CA.crt
     fqdn = webserver.example.com
+    ip = 127.0.0.1
 
     [check:test]
     command = sh -c "echo 'Warning the sky is falling'; exit 1"
@@ -72,13 +73,13 @@ nrdpd are set.  The valid options are:
     whitespace.
 * **token**: *required* The NRDP authentication token.  This is necessary for
     sending results in to the service.
-* **host**: *optional* This is the name of the host in nagios.  By default
+* **hostname**: *optional* This is the name of the host in nagios.  By default
     the library will populate this with the short name.
 
     For instance if your full hostname is *webserver.example.com* the library
-    will poulate this with *webserver*.  If you populate the ``host`` option
-    in the ``[DEFAULT]`` section and you need to revert to the short name
-    you can either explicitly use the short name or just set host to
+    will poulate this with *webserver*.  If you populate the ``hostname``
+    option in the ``[DEFAULT]`` section and you need to revert to the short
+    name you can either explicitly use the short name or just set host to
     a blank value.
 
     .. code-block:: ini
@@ -88,14 +89,16 @@ nrdpd are set.  The valid options are:
 
         [config]
         ; Default to what the library thinks
-        host =
+        hostname =
         ; Override [DEFAULT] with the short name
-        host = webserver
+        hostname = webserver
 
 * **fqdn**: *optional* This is the fully qualified domain name of the host.
     You'll want to set this if you are checking SSL certificates.  Default
     is to use what comes back from gethostname().  Many people use short names
     for this value, so it may not default to the FQDN.
+* **ip**: *optional* This is the IP address for the host.  This is primarily
+    used as the default value for *ip* when used for command substitution.
 * **cacert**: *optional* If your nrdp endpoint is available via ``https`` and
     you don't have a public cert you may have to pass in the path to a valid
     x509 CA certificate in PEM format.
@@ -125,6 +128,8 @@ Below is a full configuration example for a service check in defined for nrdpd.
     state = enable
     host = irrelevant.example.com
     command = /usr/lib64/nagios/plugins/check_load -w 15,10,5 -c 30,25,20
+    hostname = scooby
+    ip = 127.0.0.2
 
 * **timeout**: *optional* If the check does not complete within ``timeout``
     seconds report the check as ``CRITICAL`` to Nagios.  The type for this
@@ -156,6 +161,20 @@ Below is a full configuration example for a service check in defined for nrdpd.
     No validation of this value is done.  So anything you put in here can
     be used generically as a variable anywhere on the command line of the
     command.
+* **fqdn**: *optional* This value is used in variable substitution within the
+    ``command``.  Any use of ``$fqdn`` or ``${fqdn}`` within the command will
+    be substituted with this value.
+
+    No validation of this value is done.  So anything you put in here can
+    be used generically as a variable anywhere on the command line of the
+    command.
+* **ip**: *optional* This value is used in variable substitution within the
+    ``command``.  Any use of ``$ip`` or ``${ip}`` within the command will
+    be substituted with this value.  The IP must be a valid IPv4 or IPv6
+    address.
+* **hostname**: *optional* Override the host name that the nagios check is
+    submitted on behalf of.   This allows you to monitor one host from another
+    host, submitting checks on behalf of both hosts.
 * **command**: *required* The nagios plugin to execute.
 
     Variable substitution can be done here.  Any value that matches
