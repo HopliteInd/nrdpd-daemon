@@ -83,19 +83,17 @@ class NrdpdError(Exception):
     def __init__(self, err: Err, msg: str):
         super().__init__()
         if not isinstance(err, Err):
-            raise ValueError("err is not a member of %s.Err" % (__name__))
+            raise ValueError(f"err is not a member of {__name__}.Err")
         self.err = err
         self.msg = msg
 
     def __str__(self):
-        return "[%s] %s" % (self.err.name, self.msg)
+        return f"[{self.err.name}] {self.msg}"
 
     def __repr__(self):
-        return "%s.%s(Err.%s, %s)" % (
-            __name__,
-            self.__class__.__name__,
-            self.err.name,
-            repr(self.msg),
+        return (
+            f"{__name__}.{__class__.__name__}"
+            f"(Err.{self.err.name}, {repr(self.msg)})"
         )
 
 

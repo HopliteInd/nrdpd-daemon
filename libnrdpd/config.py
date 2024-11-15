@@ -21,6 +21,7 @@ use that configuration object to execute checks and submit the results.
 import configparser
 import glob
 import io
+import ipaddress
 import logging
 import os.path
 import re
@@ -37,7 +38,285 @@ from . import util
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-class Check:
+class Config:  # pylint: disable=R0902
+    """Configuration class for nrdpd.
+
+    Parameters:
+        cfgfile: Path to the nrdpd config.ini file.  The value passed in may
+            be either a ``str`` or an open file like object derived from
+            ``io.IOBase``.
+
+        confd (str or  None): Optional path to the conf.d directory.  Any
+            files matching the pattern ``*.ini`` within that directory will
+            be processed, possibly overriding existing values. The priority
+            on the files is that they are processed in lexical order, with
+            later files having the possibility to override earlier ones.
+    """
+
+    def __init__(
+        self,
+        cfgfile: typing.Union[str, io.IOBase],
+        confd: typing.Optional[str] = None,
+    ):
+        log = logging.getLogger(f"{__name__}.{__class__.__name__}")
+        log.debug("start")
+
+        self._servers = []  # List of servers to publish to
+        self._token = None  # Server authentication token
+        # Default hostname comes from socket
+        self._fqdn = socket.gethostname()
+        self._hostname = self._fqdn.split(".")[0]
+        self._cacert = None
+        self._ip = util.getip()
+
+        self._cp = configparser.ConfigParser(interpolation=None)
+        self._check_re = re.compile("^[-: a-zA-Z0-9]+")
+
+        self._checks = {}  # Dictionry of checks.  key = name, value = Check
+
+        try:
+            if isinstance(cfgfile, str):
+                with open(cfgfile, "r", encoding="utf-8") as fobj:
+                    self._cp.read_file(fobj)
+            elif isinstance(cfgfile, io.IOBase):
+                self._cp.read_file(cfgfile)
+            else:
+                raise error.ConfigError(
+                    error.Err.TYPE_ERROR,
+                    f"Invalid cfgfile type: {type(cfgfile)}",
+                )
+            if confd is not None:
+                if os.path.isdir(confd):
+                    extra = sorted(glob.glob(os.path.join(confd, "*.ini")))
+                    self._cp.read(extra)
+
+        except FileNotFoundError as err:
+            raise error.ConfigError(
+                error.Err.NOT_FOUND, f"Config file not found: {err.filename}"
+            )
+        except PermissionError as err:
+            raise error.ConfigError(
+                error.Err.PERMISSION_DENIED,
+                f"Permission denied processing config file: {err.filename}",
+            )
+        except configparser.Error as err:
+            raise error.ConfigError(
+                error.Err.PARSE_ERROR, f"Error parsing config file: {err}"
+            )
+
+        self._get_configuration()
+        self._get_checks()
+
+    def _get_req_opt(
+        self, section: str, option: str, cast: typing.Callable = str
+    ) -> any:
+        """Get a required option (must be have a value) from the config file.
+
+        Parameters:
+            section: INI file section to pull the option from
+            option: INI option to get the value of
+            cast (callable): Function to transform the value
+                (int, str, shelx.split).  Should raise ``ValueError`` on an
+                error with the conversion.
+
+        Returns:
+            (any)  Return value is a converted value from what ever ``cast``
+                does.
+
+        Raises:
+            :class:`error.ConfigError` raised when a configuration anomoly is
+                detected.
+
+        """
+        if section not in self._cp:
+            raise error.ConfigError(
+                error.Err.REQUIRED_MISSING,
+                (
+                    f"Required section [{section}] missing from "
+                    "configuration file"
+                ),
+            )
+
+        if option not in self._cp[section]:
+            raise error.ConfigError(
+                error.Err.REQUIRED_MISSING,
+                (
+                    f"Required option [{section}]->{option} missing from "
+                    "configuration file"
+                ),
+            )
+
+        value = self._cp[section][option]
+
+        if not value:
+            raise error.ConfigError(
+                error.Err.REQUIRED_MISSING,
+                f"Required option [{section}]->{option} is empty",
+            )
+
+        try:
+            value = cast(value)
+        except ValueError as err:
+            raise error.ConfigError(
+                error.Err.TYPE_ERROR,
+                f"Required option [{section}]->{option} invalid type: {err}",
+            )
+        return value
+
+    def _get_configuration(self):
+        """Pull our configuration bits out of the config file."""
+        log = logging.getLogger(f"{__name__}._get_configuration")
+        log.debug("start")
+
+        self._servers = self._get_req_opt("config", "servers", shlex.split)
+        self._token = self._get_req_opt("config", "token")
+
+        # Depends on the upper to to validate that "[config]" exists.
+        # Ternary operator handles "" as well as None when evaluating
+        # True.
+
+        # Check host first.  As it'll be used as the default for hostname
+        self._host = util.empty(self._cp["config"].get("host"), self._hostname)
+        log.debug("Host: %s", repr(self._host))
+
+        # hostname has precedence the order and defaults set that up
+        # This allows for the deprecation of host in favor of hostname
+        self._hostname = util.empty(
+            self._cp["config"].get("hostname"), self._host
+        )
+        log.debug("Hostname: %s", self._hostname)
+
+        self._fqdn = util.empty(self._cp["config"].get("fqdn"), self._fqdn)
+        log.debug("FQDN: %s", self._fqdn)
+
+        self._cacert = util.empty(self._cp["config"].get("cacert"))
+        log.debug("CA Certificate: %s", self._cacert)
+
+        ipaddr = util.empty(self._cp["config"].get("ip"))
+        if ipaddr:
+            try:
+                self._ip = ipaddress.ip_address(ipaddr).compressed
+            except (ipaddress.AddressValueError, ValueError) as err:
+                raise error.ConfigError(
+                    error.Err.TYPE_ERROR,
+                    f"[config]->ip invalid IP address: {ipaddr}: {err}",
+                ) from None
+        log.debug("ip address: %s", self._ip)
+
+        # Validate values
+        for server in self._servers:
+            try:
+                obj = urllib.parse.urlparse(server)
+                if obj.scheme not in ["http", "https"]:
+                    raise ValueError(
+                        "URL scheme must be 'http' or 'https' not "
+                        f"{repr(obj.scheme)}"
+                    )
+            except ValueError as err:
+                raise error.ConfigError(
+                    error.Err.TYPE_ERROR,
+                    f"[config]->servers invalid URL: {server}: {err}",
+                ) from None
+
+    def _get_checks(self):
+        """Loop through the configuration looking for service checks."""
+        log = logging.getLogger(f"{__name__}._get_checks")
+        log.debug("start")
+        for section in self._cp:
+            if not section.startswith("check:"):
+                log.debug("Section [%s] not a check", section)
+                continue
+
+            name = section.split(":", 1)[1]
+            if not self._check_re.match(name):
+                raise error.ConfigError(
+                    error.Err.VALUE_ERROR,
+                    f"check [{section}] has an inavlid name",
+                ) from None
+
+            timeout = self._cp[section].getfloat("timeout", 10.0)
+            frequency = self._cp[section].getfloat("frequency", 60.0)
+            command = self._get_req_opt(section, "command", shlex.split)
+            state = util.empty(self._cp[section].get("state"), "enable")
+            host = util.empty(self._cp[section].get("host"))
+            fqdn = util.empty(self._cp[section].get("fqdn"))
+            ipaddr = util.empty(self._cp[section].get("ip"))
+
+            if state not in ["enable", "disable", "fake"]:
+                raise error.ConfigError(
+                    error.Err.VALUE_ERROR,
+                    f"check [{section}] state is invalid",
+                ) from None
+
+            if state != "disable":
+                self._checks[name] = Check(
+                    name, command, timeout, frequency, self
+                )
+                self._checks[name].fake = state == "fake"
+                self._checks[name].host = host
+                self._checks[name].fqdn = fqdn
+                self._checks[name].ip = ipaddr
+
+    @property
+    def checks(self):
+        """dict of str, :class:`Check`: Dictionary describing checks to be run.
+
+        Using this property will create a duplicate dictionary that
+        you can modify without affecting the internal data structres within
+        this class.  The individual :class:`Check` objects can be modified
+        within their contstaints.
+        """
+
+        # Running dict on an existing dictionary duplicates it which is what
+        # we want here
+        return dict(self._checks)
+
+    @property
+    def servers(self):
+        """list of str: Urls for servers to publish NRDP results to."""
+        return [str(x) for x in self._servers]
+
+    @property
+    def token(self):
+        """str: Server authentication token."""
+        return str(self._token)
+
+    @property
+    def hostname(self):
+        """str: Host name presented to nagios.
+
+        By default this will be the short name.   If you want a fully qualified
+        domain name add it to the config file.
+        """
+        return str(self._hostname)
+
+    @property
+    def host(self):
+        """(deprecated) str: Host name presented to nagios.
+
+        By default this will be the short name.   If you want a fully qualified
+        domain name add it to the config file.  If "hostname" is set it will
+        be used instead.
+        """
+        return str(self._hostname)
+
+    @property
+    def fqdn(self):
+        """str: FQDN for inclusion in check varible substitution."""
+        return str(self._fqdn)
+
+    @property
+    def ip(self):  # pylint: disable=C0103
+        """:class:`util.IP`: IP address of the machine"""
+        return self._ip
+
+    @property
+    def cacert(self):  # pylint: disable=C0103
+        """str or None: CA certificate file if specified in the config"""
+        return self._cacert
+
+
+class Check:  # pylint: disable=too-many-instance-attributes
     """Class describing an individual check.
 
     Parameters:
@@ -49,6 +328,7 @@ class Check:
         timeout: How long in seconds to allow a check to run before terminating
             it and reporting CRITICAL due to timeout.
         frequency: How often in seconds the check should run.
+        config: Config class instance for outer config.
 
     Raises:
         :class:`error.ConfigError`:
@@ -57,16 +337,24 @@ class Check:
             :class:`VALUE_ERROR <error.Err>`
     """
 
-    def __init__(
+    def __init__(  # pylint: disable=R0917,too-many-arguments
         self,
         name: str,
         command: list,
         timeout: float,
         frequency: int,
+        config: Config,
     ):
         self._name = str(name)
         self._fake_it = False
         self._host = None
+        self._hostname = None
+        self._fqdn = None
+        self._fqdn = None
+        self._config = config
+
+        if not isinstance(config, Config):
+            raise TypeError("config must be a Config instance")
 
         try:
             self._timeout = util.min_float_val(timeout, 1.0, "timeout")
@@ -74,7 +362,7 @@ class Check:
         except error.ConfigError as err:
             raise error.ConfigError(
                 error.Err.VALUE_ERROR,
-                "[check:%s] %s" % (self._name, err.msg),
+                f"[check:{self._name}] {err.msg}",
             )
         self._command = command
 
@@ -114,11 +402,12 @@ class Check:
 
     @property
     def fake(self):
-        """bool: Send fake successful results.  This is to allow overriding
-        of templates where the template may be invalid for a host.  For
-        instance it allows you to generically check disk space on /var/log
-        but if a host doesn't have that partition, you can send a fake
-        success in to bypass it.
+        """bool: Send fake successful results.
+
+        This is to allow overriding of templates where the template may be
+        invalid for a host.  For instance it allows you to generically check
+        disk space on /var/log but if a host doesn't have that partition,
+        you can send a fake success in to bypass it.
         """
         return self._fake_it
 
@@ -127,14 +416,33 @@ class Check:
         if not isinstance(value, bool):
             raise error.ConfigError(
                 error.Err.VALUE_ERROR,
-                "[check:%s] fake must be a boolean" % (self._name),
+                f"[check:{self._name}] fake must be a boolean",
             )
         self._fake_it = value
 
     @property
+    def hostname(self):
+        """str or None: Override the nagios hostname on a per check basis.
+
+        This allows you to override the hostname for a given check.  This
+        overrides the hostname the check is being submitted for.
+        """
+        return util.empty(self._hostname, self._config.hostname)
+
+    @hostname.setter
+    def hostname(self, value):
+        if not isinstance(value, str) and value is not None:
+            raise error.ConfigError(
+                error.Err.VALUE_ERROR,
+                f"[check:{self._name}] hostname must be a str or None",
+            )
+        self._hostname = value
+
+    @property
     def host(self):
         """str or None: Override the host on a per check basis.
-        This allows you to override the hostname for a given check.  This
+
+        This allows you to override the host for a given check.  This
         doesn't override the hostname the check is being submitted to,
         but instead allows you to use the hostname in a template variable
         with the check.
@@ -142,253 +450,53 @@ class Check:
         For instance if you have a web server with a virtual host, you can
         define the virtual host here to use in the check command line.
         """
-        return self._host
+        return util.empty(self._host, self._config.host)
 
     @host.setter
-    def host(self, value):
+    def host(self, value: typing.Union[str, None]):
         if not isinstance(value, str) and value is not None:
             raise error.ConfigError(
                 error.Err.VALUE_ERROR,
-                "[check:%s] host must be a str or None" % (self._name),
+                f"[check:{self._name}] host must be a str or None",
             )
         self._host = value
 
+    @property
+    def ip(self):
+        """str or None: Override the ip on a per check basis.
 
-class Config:  # pylint: disable=R0902
-    """Configuration class for nrdpd.
-
-    Parameters:
-        cfgfile: Path to the nrdpd config.ini file.  The value passed in may
-            be either a ``str`` or an open file like object derived from
-            ``io.IOBase``.
-
-        confd (str or  None): Optional path to the conf.d directory.  Any
-            files matching the pattern ``*.ini`` within that directory will
-            be processed, possibly overriding existing values. The priority
-            on the files is that they are processed in lexical order, with
-            later files having the possibility to override earlier ones.
-    """
-
-    def __init__(
-        self,
-        cfgfile: typing.Union[str, io.IOBase],
-        confd: typing.Optional[str] = None,
-    ):
-        log = logging.getLogger("%s.__init__" % __name__)
-        log.debug("start")
-
-        self._servers = []  # List of servers to publish to
-        self._token = None  # Server authentication token
-        # Default hostname comes from socket
-        self._fqdn = socket.gethostname()
-        self._hostname = self._fqdn.split(".")[0]
-        self._cacert = None
-        self._ip = util.getip()
-
-        self._cp = configparser.ConfigParser(interpolation=None)
-        self._check_re = re.compile("^[-: a-zA-Z0-9]+")
-
-        self._checks = {}  # Dictionry of checks.  key = name, value = Check
-
-        try:
-            if isinstance(cfgfile, str):
-                with open(cfgfile, "r") as fobj:
-                    self._cp.read_file(fobj)
-            elif isinstance(cfgfile, io.IOBase):
-                self._cp.read_file(cfgfile)
-            else:
-                raise error.ConfigError(
-                    error.Err.TYPE_ERROR,
-                    "Invalid cfgfile type: %s" % type(cfgfile),
-                )
-            if confd is not None:
-                if os.path.isdir(confd):
-                    extra = sorted(glob.glob(os.path.join(confd, "*.ini")))
-                    self._cp.read(extra)
-
-        except FileNotFoundError as err:
-            raise error.ConfigError(
-                error.Err.NOT_FOUND, "Config file not found: %s" % err.filename
-            )
-        except PermissionError as err:
-            raise error.ConfigError(
-                error.Err.PERMISSION_DENIED,
-                "Permission was denied processing config file: %s"
-                % err.filename,
-            )
-        except configparser.Error as err:
-            raise error.ConfigError(
-                error.Err.PARSE_ERROR, "Error parsing config file: %s" % err
-            )
-
-        self._get_configuration()
-        self._get_checks()
-
-    def _get_req_opt(
-        self, section: str, option: str, cast: typing.Callable = str
-    ) -> any:
-        """Get a required option (must be have a value) from the config file.
-
-        Parameters:
-            section: INI file section to pull the option from
-            option: INI option to get the value of
-            cast (callable): Function to transform the value
-                (int, str, shelx.split).  Should raise ``ValueError`` on an
-                error with the conversion.
-
-        Returns:
-            (any)  Return value is a converted value from what ever ``cast``
-                does.
-
-        Raises:
-            :class:`error.ConfigError` raised when a configuration anomoly is
-                detected.
-
+        This allows you to override the ip for a given check.
         """
-        if section not in self._cp:
-            raise error.ConfigError(
-                error.Err.REQUIRED_MISSING,
-                "Required section [%s] missing from configuration file"
-                % section,
-            )
+        return util.empty(self._ip, self._config.ip)
 
-        if option not in self._cp[section]:
-            raise error.ConfigError(
-                error.Err.REQUIRED_MISSING,
-                "Required option [%s]->%s missing from configuration file"
-                % (section, option),
-            )
-
-        value = self._cp[section][option]
-
-        if not value:
-            raise error.ConfigError(
-                error.Err.REQUIRED_MISSING,
-                "Required option [%s]->%s is empty" % (section, option),
-            )
-
-        try:
-            value = cast(value)
-        except ValueError as err:
-            raise error.ConfigError(
-                error.Err.TYPE_ERROR,
-                "Required option [%s]->%s invalid type: %s"
-                % (section, option, err),
-            )
-        return value
-
-    def _get_configuration(self):
-        """Pull our configuration bits out of the config file."""
-        log = logging.getLogger("%s._get_configuration" % __name__)
-        log.debug("start")
-
-        self._servers = self._get_req_opt("config", "servers", shlex.split)
-        self._token = self._get_req_opt("config", "token")
-
-        # Depends on the upper to to validate that "[config]" exists.
-        # Ternary operator handles "" as well as None when evaluating
-        # True.
-        hostname = self._cp["config"].get("host")
-        self._hostname = hostname if hostname else self._hostname
-        log.debug("Hostname: %s", self._hostname)
-        fqdn = self._cp["config"].get("fqdn")
-        self._fqdn = fqdn if fqdn else self._fqdn
-        log.debug("FQDN: %s", self._fqdn)
-        cacert = self._cp["config"].get("cacert")
-        self._cacert = cacert if cacert else None
-        log.debug("CA Certificate: %s", self._cacert)
-
-        # Validate values
-        for server in self._servers:
+    @ip.setter
+    def ip(self, value: typing.Union[None, str]):
+        if value is not None:
             try:
-                obj = urllib.parse.urlparse(server)
-                if obj.scheme not in ["http", "https"]:
-                    raise ValueError(
-                        "URL scheme must be 'http' or 'https' not %s"
-                        % repr(obj.scheme)
-                    )
-            except ValueError as err:
+                value = ipaddress.ip_address(value).compressed
+            except (ipaddress.AddressValueError, ValueError) as err:
                 raise error.ConfigError(
                     error.Err.TYPE_ERROR,
-                    "[config]->servers invalid URL: %s: %s" % (server, err),
+                    (
+                        f"[check:{self._name}]->ip invalid IP address: "
+                        f"[{value}]: {err}"
+                    ),
                 ) from None
-
-    def _get_checks(self):
-        """Loop through the configuration looking for service checks."""
-        log = logging.getLogger("%s._get_checks" % __name__)
-        log.debug("start")
-        for section in self._cp:
-            if not section.startswith("check:"):
-                log.debug("Section [%s] not a check", section)
-                continue
-
-            name = section.split(":", 1)[1]
-            if not self._check_re.match(name):
-                raise error.ConfigError(
-                    error.Err.VALUE_ERROR,
-                    "check [%s] has an inavlid name" % (section),
-                ) from None
-
-            timeout = self._cp[section].get("timeout", 10.0)
-            frequency = self._cp[section].get("frequency", 60.0)
-            command = self._get_req_opt(section, "command", shlex.split)
-            state = self._cp[section].get("state", "enable")
-            host = self._cp[section].get("host")
-            if host == "":
-                host = None
-
-            if state not in ["enable", "disable", "fake"]:
-                raise error.ConfigError(
-                    error.Err.VALUE_ERROR,
-                    "check [%s] state is invalid" % (section),
-                ) from None
-
-            if state != "disable":
-                self._checks[name] = Check(name, command, timeout, frequency)
-                self._checks[name].fake = state == "fake"
-                self._checks[name].host = host
-
-    @property
-    def checks(self):
-        """dict of str, :class:`Check`: Dictionary describing checks to be run.
-
-        Using this property will create a duplicate dictionary that
-        you can modify without affecting the internal data structres within
-        this class.  The individual :class:`Check` objects can be modified
-        within their contstaints.
-        """
-        return {x: self._checks[x] for x in self._checks}
-
-    @property
-    def servers(self):
-        """list of str: Urls for servers to publish NRDP results to."""
-        return [str(x) for x in self._servers]
-
-    @property
-    def token(self):
-        """str: Server authentication token."""
-        return str(self._token)
-
-    @property
-    def host(self):
-        """str: Host name presented to nagios.
-
-        By default this will be the short name.   If you want a fully qualified
-        domain name add it to the config file.
-        """
-        return str(self._hostname)
+        self._ip = value
 
     @property
     def fqdn(self):
-        """str: FQDN for inclusion in check varible substitution."""
-        return str(self._fqdn)
+        """str or None: Override the fqdn on a per check basis.
 
-    @property
-    def ip(self):  # pylint: disable=C0103
-        """:class:`util.IP`: IP address of the machine"""
-        return self._ip
+        This allows you to override the fqdn for a given check.
+        """
+        return self._fqdn
 
-    @property
-    def cacert(self):  # pylint: disable=C0103
-        """str or None: CA certificate file if specified in the config"""
-        return self._cacert
+    @fqdn.setter
+    def fqdn(self, value):
+        if not isinstance(value, str) and value is not None:
+            raise error.ConfigError(
+                error.Err.VALUE_ERROR,
+                f"[check:{self._name}] fqdn must be a str or None",
+            )
+        self._fqdn = value

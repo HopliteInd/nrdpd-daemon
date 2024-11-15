@@ -45,12 +45,12 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
         :class:`libnrdpd.error.NotComplete`: Raised when an uncompleted
             task is passed in.
     """
-    log = logging.getLogger("%s.Nrdp.submit" % __name__)
+    log = logging.getLogger(f"{__name__}.submit" % __name__)
     if task.expired:
         # Manufacture fake CRITICAL submission results
         code = error.Status.CRITICAL
-        message = "TIMEOUT: Plugin timed out after %0.2f seconds" % (
-            task.elapsed
+        message = (
+            f"TIMEOUT: Plugin timed out after {task.elapsed:0.2f} seconds"
         )
 
     else:
@@ -62,34 +62,36 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
             # If we get output on stderr this is a failure of the
             # API contract.  Report it as an error.
             code = error.Status.CRITICAL
-            message = "Check failed with stderr output:\n%s" % (task.stderr)
+            message = f"Check failed with stderr output:\n{task.stderr}"
         elif task.status is None:
             raise error.NotComplete(
                 error.Err.INCOMPLETE,
-                "%s.Nrdp.submit called with an uncompleted task [check:%s]"
-                % (__name__, task.check.name),
+                (
+                    f"{__name__}.submit called with an uncompleted task "
+                    f"[check:{task.check.name}]"
+                ),
             )
 
         elif task.status < 0:
             # A signal killed the process
             code = error.Status.CRITICAL
-            message = "Check died with signal %d" % abs(code)
+            message = f"Check died with signal {abs(code)}"
 
         else:
             # Normal processing
             try:
                 code = error.Status(task.status)
                 message = task.stdout
-                log.debug("STDOUT: %s" % task.stdout)
+                log.debug("STDOUT: %s", task.stdout)
             except ValueError:
                 code = error.Status.CRITICAL
-                message = "Check exited with unknown code: %d" % (task.status)
+                message = f"Check exited with unknown code: {task.status}"
 
     check_results = {
         "checkresults": [
             {
                 "checkresult": {"type": "service"},
-                "hostname": cfg.host,
+                "hostname": task.check.hostname,
                 "servicename": task.check.name,
                 "state": code.value,
                 "output": message,
@@ -101,7 +103,7 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
         check_results["checkresults"].append(
             {
                 "checkresult": {"type": "host"},
-                "hostname": cfg.host,
+                "hostname": task.check.hostname,
                 "state": "0",
                 "output": "Host alive",
             }
@@ -117,17 +119,17 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
 
     for url in cfg.servers:
         try:
-            req = urllib.request.urlopen(
+            with urllib.request.urlopen(
                 url, timeout=60, data=data, cafile=cfg.cacert
-            )
+            ) as req:
 
-            httpstatus = req.getcode()
-            if httpstatus != 200:
-                log.error(
-                    "Submission to %s failed http status: %d",
-                    url,
-                    httpstatus,
-                )
+                httpstatus = req.getcode()
+                if httpstatus != 200:
+                    log.error(
+                        "Submission to %s failed http status: %d",
+                        url,
+                        httpstatus,
+                    )
         except urllib.error.URLError as err:
             log.error("Submission to %s failed: %s", url, err)
             continue

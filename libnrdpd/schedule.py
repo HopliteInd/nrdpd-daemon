@@ -41,9 +41,7 @@ class Schedule:
 
     def __init__(self, cfg: config.Config):
         if not isinstance(cfg, config.Config):
-            raise ValueError(
-                "cfg is `%s` expected config.Config" % (type(cfg))
-            )
+            raise ValueError(f"cfg is `{type(cfg)}` expected config.Config")
         self._cfg = cfg
         self._tasks = {}
         self._running = {}
@@ -61,7 +59,7 @@ class Schedule:
 
         Run in a loop forever executing checks and submitting them.
         """
-        log = logging.getLogger("%s.Schedule.loop" % __name__)
+        log = logging.getLogger(f"{__name__}.Schedule.loop")
         log.debug("Start main loop")
         self.sort()
 
@@ -114,8 +112,11 @@ class Schedule:
                 task = self._queue[0]
                 log.info("Starting check: %s", task.check.name)
                 self._running[task.check.name] = task
-                host = task.check.host if task.check.host else self._cfg.host
-                template = {"host": host, "fqdn": self._cfg.fqdn}
+                template = {
+                    "host": task.check.hostname,
+                    "fqdn": task.check.fqdn,
+                    "ip": task.check.ip,
+                }
                 log.debug("Template variables: %s", repr(template))
                 task.run(**template)
                 self.sort()

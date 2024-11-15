@@ -23,7 +23,6 @@ import os.path
 import platform
 import sys
 import stat
-import textwrap
 import traceback
 
 # Local imports
@@ -214,7 +213,7 @@ def start():
         main(opts)
         log.error("Shutdown")
     except Exception as err:  # pylint: disable=W0703
-        sys.stderr.write("%s\n" % (textwrap.fill(str(err))))
+        sys.stderr.write(f"{err}\n")
         if opts.debug:
             traceback.print_exc()
         sys.exit(1)

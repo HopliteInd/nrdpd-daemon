@@ -64,8 +64,7 @@ class Task:  # pylint: disable=R0902
     def __init__(self, check: config.Check):
         if not isinstance(check, config.Check):
             raise ValueError(
-                "Type for check %s expected libnrdpd.config.Check"
-                % (type(check))
+                f"Type for check {type(check)} expected libnrdpd.config.Check"
             )
         self._check = check
         self._start = time.time() + (random.random() * 3.0)
@@ -106,7 +105,7 @@ class Task:  # pylint: disable=R0902
 
             kwargs: Template variables to fill in.
         """
-        log = logging.getLogger("%s.run" % __name__)
+        log = logging.getLogger(f"{__name__}.run")
 
         self.reset_start()
         self._began = time.time()
@@ -129,6 +128,7 @@ class Task:  # pylint: disable=R0902
                 "Running check: %s", " ".join([shlex.quote(x) for x in cmd])
             )
             try:
+                # pylint: disable=consider-using-with
                 self._child = subprocess.Popen(
                     cmd,
                     shell=False,
@@ -143,8 +143,9 @@ class Task:  # pylint: disable=R0902
                 )
                 self._child = _FakeChild(
                     error.Status.CRITICAL.value,
-                    stdout="Unable to execute [check:%s]: %s"
-                    % (self._check.name, err),
+                    stdout=(
+                        f"Unable to execute [check:{self._check.name}]: {err}",
+                    ),
                 )
 
     def reset_start(self):
@@ -153,7 +154,7 @@ class Task:  # pylint: disable=R0902
         This happens automatically during run() and reset().
         """
 
-        log = logging.getLogger("%s.reset_start" % __name__)
+        log = logging.getLogger(f"{__name__}.reset_start")
         now = time.time()
         if self._start < now:
             self._start = self._start + self._check.frequency
@@ -179,7 +180,7 @@ class Task:  # pylint: disable=R0902
         check of this value will initiate an output check and process that
         output of any was found.
         """
-        log = logging.getLogger("%s.complete" % __name__)
+        log = logging.getLogger(f"{__name__}.complete")
         if self._child and self._running:
             try:
                 stdout, stderr = self._child.communicate(timeout=0.01)
@@ -198,14 +199,14 @@ class Task:  # pylint: disable=R0902
 
             if stdout:
                 log.debug(
-                    "stdout found: %s"
-                    % (stdout.decode("utf-8", errors="replace"))
+                    "stdout found: %s",
+                    stdout.decode("utf-8", errors="replace"),
                 )
                 self._stdout.write(stdout.decode("utf-8", errors="replace"))
             if stderr:
                 log.debug(
-                    "stderr found: %s"
-                    % (stderr.decode("utf-8", errors="replace"))
+                    "stderr found: %s",
+                    stderr.decode("utf-8", errors="replace"),
                 )
                 self._stderr.write(stderr.decode("utf-8", errors="replace"))
 

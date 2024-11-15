@@ -56,6 +56,22 @@ acquire a statistical model of the most likely default route.
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
+def empty(
+    value: typing.Union[str, None], fallback: any = None
+) -> typing.Union[str, None]:
+    """Convert string value to None if it's empty
+
+    Parameters:
+        value: Incoming value to check on.  A value of None or an empty string
+            counts as empty.
+        fallback: If set then use this as the "empty" value.
+    """
+    retval = value
+    if value == "" or value is None:
+        retval = fallback
+    return retval
+
+
 def min_float_val(value: float, minval: float, name: str):
     """Convert argument to float assuring it meets it's minimal value.
 
@@ -72,7 +88,7 @@ def min_float_val(value: float, minval: float, name: str):
             when the value doesn't meet the ``minval`` minimum value.
 
     """
-    log = logging.getLogger("%s.min_float_val" % __name__)
+    log = logging.getLogger(f"{__name__}.min_float_val")
     log.debug(
         "start: value=%s minval=%s name=%s",
         repr(value),
@@ -84,19 +100,19 @@ def min_float_val(value: float, minval: float, name: str):
     except ValueError as err:
         raise error.ConfigError(
             error.Err.TYPE_ERROR,
-            "Value for '%s' must be a number: %s" % (name, err),
+            f"Value for '{name}' must be a number: {err}",
         ) from None
     try:
         minimum = float(minval)
     except ValueError as err:
         raise error.ConfigError(
             error.Err.TYPE_ERROR,
-            "minval for '%s' must be a number: %s" % (name, err),
+            f"minval for '{name}' must be a number: {err}",
         ) from None
     if retval < minimum:
         raise error.ConfigError(
             error.Err.VALUE_ERROR,
-            "Value for '%s' must be greater than %0.2f" % (name, minimum),
+            f"Value for '{name}' must be greater than {minimum:0.2f}",
         )
     return retval
 
@@ -124,7 +140,7 @@ class IP:  # pylint: disable=C0103
             except ValueError as err:
                 raise error.NrdpdError(
                     error.Err.VALUE_ERROR,
-                    "IPv4 address is not valid: %s" % err,
+                    f"IPv4 address is not valid: {err}",
                 ) from None
             self._ipv4 = ipv4
 
@@ -134,7 +150,7 @@ class IP:  # pylint: disable=C0103
             except ValueError as err:
                 raise error.NrdpdError(
                     error.Err.VALUE_ERROR,
-                    "IPv6 address is not valid: %s" % err,
+                    f"IPv6 address is not valid: {err}",
                 ) from None
             self._ipv6 = ipv6
 
@@ -142,7 +158,7 @@ class IP:  # pylint: disable=C0103
         return self._ipv6 if self._ipv6 else self._ipv4
 
     def __repr__(self):
-        return "%s.IP(%s, %s)" % (__name__, repr(self._ipv4), repr(self._ipv6))
+        return f"{__name__}.IP({repr(self._ipv4)}, {repr(self._ipv6)})"
 
     @property
     def address(self):
@@ -186,7 +202,7 @@ def getip():
             When no IP is able to be determined.
     """
 
-    log = logging.getLogger("%s.getip" % __name__)
+    log = logging.getLogger(f"{__name__}.getip")
 
     ipv6 = {}
     for remote in IPV6_ADDRS:

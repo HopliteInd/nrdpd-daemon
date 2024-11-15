@@ -19,8 +19,6 @@ import configparser
 
 sys.path.insert(0, os.path.abspath(os.pardir))
 
-cp = configparser.ConfigParser()
-cp.read(os.path.join("..", "setup.cfg"))
 
 # -- Project information -----------------------------------------------------
 
@@ -29,7 +27,7 @@ copyright = "2020, Hoplite Industries, Inc."  # noqa: A001
 author = "Shawn Michael"
 
 # The full version, including alpha/beta/rc tags
-release = cp.get("metadata", "version")
+release = "1.0.0"
 
 
 # -- General configuration ---------------------------------------------------
