@@ -45,7 +45,7 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
         :class:`libnrdpd.error.NotComplete`: Raised when an uncompleted
             task is passed in.
     """
-    log = logging.getLogger(f"{__name__}.submit" % __name__)
+    log = logging.getLogger(f"{__name__}.submit")
     if task.expired:
         # Manufacture fake CRITICAL submission results
         code = error.Status.CRITICAL
