@@ -352,7 +352,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
         self._host = None
         self._hostname = None
         self._fqdn = None
-        self._fqdn = None
+        self._ip = None
         self._config = config
 
         if not isinstance(config, Config):
@@ -492,7 +492,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
 
         This allows you to override the fqdn for a given check.
         """
-        return self._fqdn
+        return util.empty(self._fqdn, self._config.fqdn)
 
     @fqdn.setter
     def fqdn(self, value):

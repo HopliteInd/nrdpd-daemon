@@ -113,7 +113,7 @@ class Schedule:
                 log.info("Starting check: %s", task.check.name)
                 self._running[task.check.name] = task
                 template = {
-                    "host": task.check.hostname,
+                    "host": task.check.host,
                     "fqdn": task.check.fqdn,
                     "ip": task.check.ip,
                 }
