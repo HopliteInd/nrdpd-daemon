@@ -339,7 +339,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
             :class:`VALUE_ERROR <error.Err>`
     """
 
-    def __init__(  # pylint: disable=R0917,too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         name: str,
         command: list,
@@ -464,7 +464,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
         self._host = value
 
     @property
-    def ip(self):
+    def ip(self):  # pylint: disable=invalid-name
         """str or None: Override the ip on a per check basis.
 
         This allows you to override the ip for a given check.
@@ -472,7 +472,9 @@ class Check:  # pylint: disable=too-many-instance-attributes
         return util.empty(self._ip, self._config.ip)
 
     @ip.setter
-    def ip(self, value: typing.Union[None, str]):
+    def ip(
+        self, value: typing.Union[None, str]
+    ):  # pylint: disable=invalid-name
         if value is not None:
             try:
                 value = ipaddress.ip_address(value).compressed

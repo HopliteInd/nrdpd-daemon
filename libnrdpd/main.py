@@ -59,6 +59,10 @@ def parse_args():
     posixpath = "/etc/nrdpd/conf.d"
     confd = winpath if platform.system() == "Windows" else posixpath
 
+    # Enable syslog facility choosing on posix systems
+    if platform.system() != "Windows":
+        facilities = logging.handlers.SysLogHandler.facility_names.keys()
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--debug",
@@ -99,6 +103,14 @@ def parse_args():
             dest="pidfile",
             default="/var/run/nrdpd.pid",
             help="Pid file location [Default: %(default)s]",
+        )
+        parser.add_argument(
+            "-f",
+            "--syslog-facility",
+            dest="facility",
+            default="user",
+            choices=facilities,
+            help="Syslog facility to log to [Default: %(default)s]",
         )
     parser.add_argument(
         "-c",
@@ -155,6 +167,7 @@ def start():
         )
         syslog.setFormatter(formatter)
     else:
+        facility = logging.handlers.SysLogHandler.facility_names[opts.facility]
         sock_location = "/dev/log"  # unconditional default
         for location in SYSLOG_SOCKETS:
             try:
@@ -166,7 +179,9 @@ def start():
                 sock_location = location
                 break
         # Set up a syslog output stream
-        syslog = logging.handlers.SysLogHandler(sock_location)
+        syslog = logging.handlers.SysLogHandler(
+            sock_location, facility=facility
+        )
         syslog.setLevel(logging.ERROR)
         formatter = logging.Formatter(
             f"{PROGRAM}[%(process)d]: %(name)s {opts.session_id} %(message)s"
