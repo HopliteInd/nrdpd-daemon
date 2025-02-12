@@ -40,6 +40,13 @@ nrdpd = "libnrdpd.main:start"
 [project.urls]
 Homepage = "https://github.com/HopliteInd/nrdpd-daemon"
 
+[publish.index]
+
+
+[publish.index.repos.main]
+url = "https://upload.pypi.org/legacy/"
+
+
 [tool.hatch.version]
 path = "libnrdpd/__about__.py"
 
