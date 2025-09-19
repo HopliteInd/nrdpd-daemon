@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "nrdp-daemon"
 description = "Nagios Remote Data Processor Daemon"
-readme = "README.rst"
+readme = "README.txt"
 requires-python = ">=3.7"
 license_file = "LICENSE.txt"
 authors = [
@@ -54,7 +54,6 @@ path = "libnrdpd/__about__.py"
 include = [
   "libnrdpd/*.py",
   "*.txt",
-  "*.rst",
 ]
 exclude = []
 
@@ -62,7 +61,6 @@ exclude = []
 include = [
   "libnrdpd/*.py",
   "*.txt",
-  "*.rst",
 ]
 exclude = []
 
@@ -74,4 +72,31 @@ files = ["requirements-3rdparty.txt", "requirements-hoplite.txt"]
 
 [tool.black]
 line_length = 79
+
+[tool.ruff]
+line-length = 79
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [ "A", "B", "PL", "F", "AIR"]
+ignore = ["A005"]
+
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.uv]
+native-tls = true
+
+[tool.uv.pip]
+index-url = "https://pypi.int.hopliteindustries.com/hoplite/prod/+simple/"
 
