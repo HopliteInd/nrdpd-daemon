@@ -54,6 +54,7 @@ path = "libnrdpd/__about__.py"
 include = [
   "libnrdpd/*.py",
   "*.txt",
+  "*.ini",
 ]
 exclude = []
 
@@ -61,6 +62,7 @@ exclude = []
 include = [
   "libnrdpd/*.py",
   "*.txt",
+  "*.ini",
 ]
 exclude = []
 
