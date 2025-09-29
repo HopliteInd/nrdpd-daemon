@@ -53,8 +53,6 @@ path = "libnrdpd/__about__.py"
 [tool.hatch.build.targets.wheel]
 include = [
   "libnrdpd/*.py",
-  "*.txt",
-  "*.ini",
 ]
 exclude = []
 
