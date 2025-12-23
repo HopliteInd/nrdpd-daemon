@@ -137,6 +137,16 @@ class Task:  # pylint: disable=R0902
                     stderr=subprocess.PIPE,
                     close_fds=True,
                 )
+            except FileNotFoundError as err:
+                log.error(
+                    "Unable to run [check:%s]: %s", self._check.name, err
+                )
+                self._child = _FakeChild(
+                    error.Status.CRITICAL.value,
+                    stdout=(
+                        f"Unable to execute [check:{self._check.name}]: {err}",
+                    ),
+                )
             except OSError as err:
                 log.error(
                     "Unable to run [check:%s]: %s", self._check.name, err
