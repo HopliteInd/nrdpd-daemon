@@ -14,4 +14,4 @@
 
 """Library and daemon for managing NRDP submissions."""
 
-__version__ = "1.0.31"
+__version__ = "1.0.32"
