@@ -17,7 +17,6 @@ The primary object to interact with is :class:`Config`.  From there you can
 use that configuration object to execute checks and submit the results.
 """
 
-
 import configparser
 import glob
 import io
@@ -468,9 +467,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
         return util.empty(self._ip, self._config.ip)
 
     @ip.setter
-    def ip(
-        self, value: None | str
-    ) -> None:  # pylint: disable=invalid-name
+    def ip(self, value: None | str) -> None:  # pylint: disable=invalid-name
         if value is not None:
             try:
                 value = ipaddress.ip_address(value).compressed

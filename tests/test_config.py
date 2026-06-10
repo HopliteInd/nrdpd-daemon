@@ -32,6 +32,7 @@ def test_config_valid_overrides() -> None:
         os.path.join("config", "config-valid.ini"),
         os.path.join("config", "conf.d"),
     )
+    fqdn = socket.gethostname()
     assert cfg.token == "g"
     assert cfg.servers[0] == "https://127.0.0.1:99/nrdp"
     assert cfg.servers[1] == "https://127.0.0.1:77/nrdp"
@@ -48,7 +49,7 @@ def test_config_valid_overrides() -> None:
             assert check.timeout == 15.0
             assert check.frequency == 120.0
             assert check.ip == "127.0.0.1"
-            assert check.fqdn is None
+            assert check.fqdn  == fqdn
             assert check.hostname == "i.love.roses"
 
         if name == "test2":

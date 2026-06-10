@@ -29,7 +29,9 @@ from . import task as tasklib
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False) -> None:
+def submit(
+    cfg: config.Config, task: tasklib.Task, send_host: bool = False
+) -> None:
     """Submit a completed task to nagios via nrdp.
 
     This will submit the request to all servers in the servers

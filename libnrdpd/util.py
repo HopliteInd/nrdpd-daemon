@@ -55,9 +55,7 @@ acquire a statistical model of the most likely default route.
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def empty(
-    value: str | None, fallback: any | None = None
-) -> str | None:
+def empty(value: str | None, fallback: any = None) -> str | None:
     """Convert string value to None if it's empty.
 
     Parameters:
