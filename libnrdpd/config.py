@@ -33,7 +33,6 @@ import urllib.parse
 from . import error
 from . import util
 
-
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 

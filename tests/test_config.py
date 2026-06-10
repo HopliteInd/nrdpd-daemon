@@ -10,6 +10,7 @@ import libnrdpd
 DEF_TIMEOUT = 10.0
 DEF_FREQUENCY = 60.0
 
+
 # Test loading of a valid config file
 def test_config_valid() -> None:
     cfg = libnrdpd.config.Config(os.path.join("config", "config-valid.ini"))
@@ -49,14 +50,13 @@ def test_config_valid_overrides() -> None:
             assert check.timeout == 15.0
             assert check.frequency == 120.0
             assert check.ip == "127.0.0.1"
-            assert check.fqdn  == fqdn
+            assert check.fqdn == fqdn
             assert check.hostname == "i.love.roses"
 
         if name == "test2":
             assert check.fake
             assert check.ip == "127.0.0.1"
             assert check.hostname == "i.love.roses"
-
 
         # Disabled.  Should never show up under the checks at all.
         assert name != "test3"
@@ -79,4 +79,3 @@ def test_config_valid_mvp() -> None:
 def test_config_bad_url() -> None:
     with pytest.raises(libnrdpd.error.ConfigError):
         libnrdpd.config.Config(os.path.join("config", "config-bad-url.ini"))
-

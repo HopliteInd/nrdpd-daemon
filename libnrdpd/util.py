@@ -21,7 +21,6 @@ import socket
 # Local imports
 from . import error
 
-
 IPV6_ADDRS = [
     "2620:119:35::35",  # OpenDNS DNS server
     "2001:4860:4860::8888",  # Google Public DNS server

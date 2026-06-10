@@ -24,7 +24,6 @@ from . import config
 from . import nrdp
 from . import task as tasklib
 
-
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
