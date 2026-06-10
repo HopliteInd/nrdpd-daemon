@@ -17,7 +17,6 @@
 import ipaddress
 import logging
 import socket
-import typing
 
 # Local imports
 from . import error
@@ -57,9 +56,9 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 def empty(
-    value: typing.Union[str, None], fallback: any = None
-) -> typing.Union[str, None]:
-    """Convert string value to None if it's empty
+    value: str | None, fallback: any | None = None
+) -> str | None:
+    """Convert string value to None if it's empty.
 
     Parameters:
         value: Incoming value to check on.  A value of None or an empty string
@@ -125,7 +124,7 @@ class IP:  # pylint: disable=C0103
         ipv6 (str or None): IPv6 address
     """
 
-    def __init__(self, ipv4: typing.Optional[str], ipv6: typing.Optional[str]):
+    def __init__(self, ipv4: str | None, ipv6: str | None):
         self._ipv4 = None
         self._ipv6 = None
         if ipv4 is None and ipv6 is None:
@@ -154,11 +153,11 @@ class IP:  # pylint: disable=C0103
                 ) from None
             self._ipv6 = ipv6
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self._ipv6 if self._ipv6 else self._ipv4
 
-    def __repr__(self):
-        return f"{__name__}.IP({repr(self._ipv4)}, {repr(self._ipv6)})"
+    def __repr__(self) -> str:
+        return f"{__name__}.IP({self._ipv4!r}, {self._ipv6!r})"
 
     @property
     def address(self):
@@ -190,7 +189,7 @@ class IP:  # pylint: disable=C0103
         return self._ipv6 if self._ipv6 else "::1"
 
 
-def getip():
+def getip() -> IP:
     """Determine the IP of the machine.
 
     Returns:
@@ -201,7 +200,6 @@ def getip():
         :exc:`libnrdpd.error.NrdpdError`
             When no IP is able to be determined.
     """
-
     log = logging.getLogger(f"{__name__}.getip")
 
     ipv6 = {}

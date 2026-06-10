@@ -29,7 +29,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 class Schedule:
-    """Handle scheduling of checks
+    """Handle scheduling of checks.
 
     Parameters:
         cfg (:class:`libnrdpd.config.Config`): Config object
@@ -50,11 +50,11 @@ class Schedule:
         for check in self._cfg.checks.values():
             self._queue.append(tasklib.Task(check))
 
-    def sort(self):
-        """Re-sort the queue for processing"""
+    def sort(self) -> None:
+        """Re-sort the queue for processing."""
         self._queue = sorted(self._queue, key=lambda x: x.start)
 
-    def loop(self):
+    def loop(self) -> None:
         """Main engine for the nrdpd daemon.
 
         Run in a loop forever executing checks and submitting them.

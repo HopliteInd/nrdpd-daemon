@@ -11,7 +11,7 @@ DEF_TIMEOUT = 10.0
 DEF_FREQUENCY = 60.0
 
 # Test loading of a valid config file
-def test_config_valid():
+def test_config_valid() -> None:
     cfg = libnrdpd.config.Config(os.path.join("config", "config-valid.ini"))
     assert cfg.token == "b"
     assert cfg.servers[0] == "http://127.0.0.1:8898/nrdp"
@@ -27,7 +27,7 @@ def test_config_valid():
 
 
 # Test loading valid config with overrides in conf.d files
-def test_config_valid_overrides():
+def test_config_valid_overrides() -> None:
     cfg = libnrdpd.config.Config(
         os.path.join("config", "config-valid.ini"),
         os.path.join("config", "conf.d"),
@@ -62,7 +62,7 @@ def test_config_valid_overrides():
 
 
 # Test loading valid minimally viable product config file.
-def test_config_valid_mvp():
+def test_config_valid_mvp() -> None:
     cfg = libnrdpd.config.Config(
         os.path.join("config", "config-mvp.ini"),
     )
@@ -70,12 +70,12 @@ def test_config_valid_mvp():
     assert cfg.servers[0] == "http://127.0.0.1:9999/nrdp"
     assert cfg.host == socket.gethostname().split(".")[0]
 
-    for name, check in cfg.checks.items():
+    for check in cfg.checks.values():
         assert check.timeout == DEF_TIMEOUT
         assert check.frequency == DEF_FREQUENCY
 
 
-def test_config_bad_url():
+def test_config_bad_url() -> None:
     with pytest.raises(libnrdpd.error.ConfigError):
         libnrdpd.config.Config(os.path.join("config", "config-bad-url.ini"))
 

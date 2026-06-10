@@ -21,7 +21,6 @@ import shlex
 import string
 import subprocess
 import time
-import typing
 
 # Local imports
 from . import config
@@ -37,8 +36,8 @@ class _FakeChild:
     def __init__(
         self,
         code: int,
-        stdout: typing.Optional[str] = None,
-        stderr: typing.Optional[str] = None,
+        stdout: str | None = None,
+        stderr: str | None = None,
     ):
         self._code = code
         self._stdout = stdout.encode("utf-8") if stdout is not None else None
@@ -80,7 +79,7 @@ class Task:  # pylint: disable=R0902
 
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """Reset task so it can be run again.
 
         Call this when you have completed processing a given run of a task.
@@ -95,7 +94,7 @@ class Task:  # pylint: disable=R0902
 
         self.reset_start()
 
-    def run(self, **kwargs):
+    def run(self, **kwargs) -> None:
         """Start the execution of the check associated with this task.
 
         Convert the variables in the command from the check into something
@@ -158,12 +157,11 @@ class Task:  # pylint: disable=R0902
                     ),
                 )
 
-    def reset_start(self):
+    def reset_start(self) -> None:
         """Set start time for the NEXT check.
 
         This happens automatically during run() and reset().
         """
-
         log = logging.getLogger(f"{__name__}.reset_start")
         now = time.time()
         if self._start < now:
@@ -183,7 +181,7 @@ class Task:  # pylint: disable=R0902
             )
 
     @property
-    def complete(self):
+    def complete(self) -> bool:
         """bool: Tell if the task has completed.
 
         Keep checking this value to see if the check has completed.  Each
@@ -220,15 +218,14 @@ class Task:  # pylint: disable=R0902
                 )
                 self._stderr.write(stderr.decode("utf-8", errors="replace"))
 
-            if self._running:
-                if self.expired:
-                    self._child.kill()
+            if self._running and self.expired:
+                self._child.kill()
 
         return not self._running
 
     @property
     def status(self):
-        """int or None: The exit code for the process.
+        """Int or None: The exit code for the process.
 
         * ``None``:  The Task hasn't processed the execution status yet.
         * ``int``: The exit status of the check.  To be valid
@@ -256,7 +253,7 @@ class Task:  # pylint: disable=R0902
 
     @property
     def ended(self):
-        """float or None: Time when the "current" run of the check ended.
+        """Float or None: Time when the "current" run of the check ended.
 
         A value of ``None`` indicates that the Task hasn't detected
         that the process has ended yet.
@@ -279,7 +276,7 @@ class Task:  # pylint: disable=R0902
 
     @property
     def stdout(self):
-        """str or None: stdout from the check."""
+        """Str or None: stdout from the check."""
         retval = None
         if self._child:
             value = self._stdout.getvalue()
@@ -290,7 +287,7 @@ class Task:  # pylint: disable=R0902
 
     @property
     def stderr(self):
-        """str or None: stderr from the check.
+        """Str or None: stderr from the check.
 
         A value other than ``None`` is considered a failed check.
         """

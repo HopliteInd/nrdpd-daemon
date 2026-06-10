@@ -68,7 +68,7 @@ class Err(enum.Enum):
 
 
 class NrdpdError(Exception):
-    """Base exception for all exceptions emitted from libnrdp
+    """Base exception for all exceptions emitted from libnrdp.
 
     Parameters:
         err: Value from  the enum :class:`Err`
@@ -87,13 +87,13 @@ class NrdpdError(Exception):
         self.err = err
         self.msg = msg
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"[{self.err.name}] {self.msg}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{__name__}.{__class__.__name__}"
-            f"(Err.{self.err.name}, {repr(self.msg)})"
+            f"(Err.{self.err.name}, {self.msg!r})"
         )
 
 
@@ -106,4 +106,4 @@ class NetworkError(NrdpdError):
 
 
 class ConfigError(NrdpdError):
-    """Raised on errors related to the configuration file"""
+    """Raised on errors related to the configuration file."""

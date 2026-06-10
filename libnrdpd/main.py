@@ -136,7 +136,7 @@ def parse_args():
     return opts
 
 
-def main(opts):
+def main(opts) -> None:
     """Core running logic for the program."""
     log = logging.getLogger(f"{__name__}.main")
     log.debug("Start")
@@ -155,7 +155,7 @@ def main(opts):
     sched.loop()
 
 
-def start():
+def start() -> None:
     """Entry point for pybuild process."""
     opts = parse_args()
 

@@ -55,8 +55,8 @@ class Config:  # pylint: disable=R0902
 
     def __init__(
         self,
-        cfgfile: typing.Union[str, io.IOBase],
-        confd: typing.Optional[str] = None,
+        cfgfile: str | io.IOBase,
+        confd: str | None = None,
     ):
         log = logging.getLogger(f"{__name__}.{__class__.__name__}")
         log.debug("start")
@@ -76,7 +76,7 @@ class Config:  # pylint: disable=R0902
 
         try:
             if isinstance(cfgfile, str):
-                with open(cfgfile, "r", encoding="utf-8") as fobj:
+                with open(cfgfile, encoding="utf-8") as fobj:
                     self._cp.read_file(fobj)
             elif isinstance(cfgfile, io.IOBase):
                 self._cp.read_file(cfgfile)
@@ -85,10 +85,9 @@ class Config:  # pylint: disable=R0902
                     error.Err.TYPE_ERROR,
                     f"Invalid cfgfile type: {type(cfgfile)}",
                 )
-            if confd is not None:
-                if os.path.isdir(confd):
-                    extra = sorted(glob.glob(os.path.join(confd, "*.ini")))
-                    self._cp.read(extra)
+            if confd is not None and os.path.isdir(confd):
+                extra = sorted(glob.glob(os.path.join(confd, "*.ini")))
+                self._cp.read(extra)
 
         except FileNotFoundError as err:
             raise error.ConfigError(
@@ -163,7 +162,7 @@ class Config:  # pylint: disable=R0902
             )
         return value
 
-    def _get_configuration(self):
+    def _get_configuration(self) -> None:
         """Pull our configuration bits out of the config file."""
         log = logging.getLogger(f"{__name__}._get_configuration")
         log.debug("start")
@@ -210,7 +209,7 @@ class Config:  # pylint: disable=R0902
                 if obj.scheme not in ["http", "https"]:
                     raise ValueError(
                         "URL scheme must be 'http' or 'https' not "
-                        f"{repr(obj.scheme)}"
+                        f"{obj.scheme!r}"
                     )
             except ValueError as err:
                 raise error.ConfigError(
@@ -218,7 +217,7 @@ class Config:  # pylint: disable=R0902
                     f"[config]->servers invalid URL: {server}: {err}",
                 ) from None
 
-    def _get_checks(self):
+    def _get_checks(self) -> None:
         """Loop through the configuration looking for service checks."""
         log = logging.getLogger(f"{__name__}._get_checks")
         log.debug("start")
@@ -261,21 +260,20 @@ class Config:  # pylint: disable=R0902
 
     @property
     def checks(self):
-        """dict of str, :class:`Check`: Dictionary describing checks to be run.
+        """Dict of str, :class:`Check`: Dictionary describing checks to be run.
 
         Using this property will create a duplicate dictionary that
         you can modify without affecting the internal data structres within
         this class.  The individual :class:`Check` objects can be modified
         within their contstaints.
         """
-
         # Running dict on an existing dictionary duplicates it which is what
         # we want here
         return dict(self._checks)
 
     @property
     def servers(self):
-        """list of str: Urls for servers to publish NRDP results to."""
+        """List of str: Urls for servers to publish NRDP results to."""
         return [str(x) for x in self._servers]
 
     @property
@@ -309,12 +307,12 @@ class Config:  # pylint: disable=R0902
 
     @property
     def ip(self):  # pylint: disable=C0103
-        """:class:`util.IP`: IP address of the machine"""
+        """:class:`util.IP`: IP address of the machine."""
         return self._ip
 
     @property
     def cacert(self):  # pylint: disable=C0103
-        """str or None: CA certificate file if specified in the config"""
+        """Str or None: CA certificate file if specified in the config."""
         return self._cacert
 
 
@@ -375,7 +373,6 @@ class Check:  # pylint: disable=too-many-instance-attributes
         This value is the same as is in the nagios config file.  It's case
         sensitive and can only be set during object creation.
         """
-
         return self._name
 
     @property
@@ -385,7 +382,6 @@ class Check:  # pylint: disable=too-many-instance-attributes
         Once this time value has been hit, the individual check process
         is terminated and CRITICAL is reported back to nagios.
         """
-
         return self._timeout
 
     @property
@@ -395,7 +391,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
 
     @property
     def command(self):
-        """list of str: Read only. A 'new' list of the command to run.
+        """List of str: Read only. A 'new' list of the command to run.
 
         Any template variables have not been filled out yet.  See
         :class:`libnrdpd.task.Task` for handling of templates.
@@ -414,7 +410,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
         return self._fake_it
 
     @fake.setter
-    def fake(self, value):
+    def fake(self, value) -> None:
         if not isinstance(value, bool):
             raise error.ConfigError(
                 error.Err.VALUE_ERROR,
@@ -424,7 +420,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
 
     @property
     def hostname(self):
-        """str or None: Override the nagios hostname on a per check basis.
+        """Str or None: Override the nagios hostname on a per check basis.
 
         This allows you to override the hostname for a given check.  This
         overrides the hostname the check is being submitted for.
@@ -432,7 +428,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
         return util.empty(self._hostname, self._config.hostname)
 
     @hostname.setter
-    def hostname(self, value):
+    def hostname(self, value) -> None:
         if not isinstance(value, str) and value is not None:
             raise error.ConfigError(
                 error.Err.VALUE_ERROR,
@@ -442,7 +438,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
 
     @property
     def host(self):
-        """str or None: Override the host on a per check basis.
+        """Str or None: Override the host on a per check basis.
 
         This allows you to override the host for a given check.  This
         doesn't override the hostname the check is being submitted to,
@@ -455,7 +451,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
         return util.empty(self._host, self._config.host)
 
     @host.setter
-    def host(self, value: typing.Union[str, None]):
+    def host(self, value: str | None) -> None:
         if not isinstance(value, str) and value is not None:
             raise error.ConfigError(
                 error.Err.VALUE_ERROR,
@@ -465,7 +461,7 @@ class Check:  # pylint: disable=too-many-instance-attributes
 
     @property
     def ip(self):  # pylint: disable=invalid-name
-        """str or None: Override the ip on a per check basis.
+        """Str or None: Override the ip on a per check basis.
 
         This allows you to override the ip for a given check.
         """
@@ -473,8 +469,8 @@ class Check:  # pylint: disable=too-many-instance-attributes
 
     @ip.setter
     def ip(
-        self, value: typing.Union[None, str]
-    ):  # pylint: disable=invalid-name
+        self, value: None | str
+    ) -> None:  # pylint: disable=invalid-name
         if value is not None:
             try:
                 value = ipaddress.ip_address(value).compressed
@@ -490,14 +486,14 @@ class Check:  # pylint: disable=too-many-instance-attributes
 
     @property
     def fqdn(self):
-        """str or None: Override the fqdn on a per check basis.
+        """Str or None: Override the fqdn on a per check basis.
 
         This allows you to override the fqdn for a given check.
         """
         return util.empty(self._fqdn, self._config.fqdn)
 
     @fqdn.setter
-    def fqdn(self, value):
+    def fqdn(self, value) -> None:
         if not isinstance(value, str) and value is not None:
             raise error.ConfigError(
                 error.Err.VALUE_ERROR,

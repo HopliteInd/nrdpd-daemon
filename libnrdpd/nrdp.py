@@ -16,6 +16,7 @@
 
 import json
 import logging
+import ssl
 import urllib.error
 import urllib.request
 import urllib.parse
@@ -28,7 +29,7 @@ from . import task as tasklib
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
-def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
+def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False) -> None:
     """Submit a completed task to nagios via nrdp.
 
     This will submit the request to all servers in the servers
@@ -53,39 +54,38 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
             f"TIMEOUT: Plugin timed out after {task.elapsed:0.2f} seconds"
         )
 
+    elif task.stderr:
+        # This must be first in order to accommodate for the
+        # possibility that we can't fork a sub process.  Being first
+        # allows us to bypass a bunch of other assumptions.
+
+        # If we get output on stderr this is a failure of the
+        # API contract.  Report it as an error.
+        code = error.Status.CRITICAL
+        message = f"Check failed with stderr output:\n{task.stderr}"
+    elif task.status is None:
+        raise error.NotComplete(
+            error.Err.INCOMPLETE,
+            (
+                f"{__name__}.submit called with an uncompleted task "
+                f"[check:{task.check.name}]"
+            ),
+        )
+
+    elif task.status < 0:
+        # A signal killed the process
+        code = error.Status.CRITICAL
+        message = f"Check died with signal {abs(code)}"
+
     else:
-        if task.stderr:
-            # This must be first in order to accommodate for the
-            # possibility that we can't fork a sub process.  Being first
-            # allows us to bypass a bunch of other assumptions.
-
-            # If we get output on stderr this is a failure of the
-            # API contract.  Report it as an error.
+        # Normal processing
+        try:
+            code = error.Status(task.status)
+            message = task.stdout
+            log.debug("STDOUT: %s", task.stdout)
+        except ValueError:
             code = error.Status.CRITICAL
-            message = f"Check failed with stderr output:\n{task.stderr}"
-        elif task.status is None:
-            raise error.NotComplete(
-                error.Err.INCOMPLETE,
-                (
-                    f"{__name__}.submit called with an uncompleted task "
-                    f"[check:{task.check.name}]"
-                ),
-            )
-
-        elif task.status < 0:
-            # A signal killed the process
-            code = error.Status.CRITICAL
-            message = f"Check died with signal {abs(code)}"
-
-        else:
-            # Normal processing
-            try:
-                code = error.Status(task.status)
-                message = task.stdout
-                log.debug("STDOUT: %s", task.stdout)
-            except ValueError:
-                code = error.Status.CRITICAL
-                message = f"Check exited with unknown code: {task.status}"
+            message = f"Check exited with unknown code: {task.status}"
 
     check_results = {
         "checkresults": [
@@ -117,12 +117,15 @@ def submit(cfg: config.Config, task: tasklib.Task, send_host: bool = False):
     data = urllib.parse.urlencode(payload).encode("utf-8")
     log.debug("payload = %s", repr(payload))
 
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    context.load_default_certs()
+    context.load_verify_locations(cafile=cfg.cacert)
+
     for url in cfg.servers:
         try:
             with urllib.request.urlopen(
-                url, timeout=60, data=data, cafile=cfg.cacert
+                url, timeout=60, data=data, context=context
             ) as req:
-
                 httpstatus = req.getcode()
                 if httpstatus != 200:
                     log.error(

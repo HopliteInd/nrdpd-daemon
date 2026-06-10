@@ -8,7 +8,7 @@ import libnrdpd
 
 
 @pytest.mark.skipif(platform.system() == "Windows", reason="Needs /bin/sh")
-def test_Task():
+def test_Task() -> None:
     cfg = libnrdpd.config.Config(os.path.join("config", "config-valid.ini"))
     task = libnrdpd.task.Task(cfg.checks["test"])
 
@@ -19,5 +19,5 @@ def test_Task():
             break
 
     assert task.status == 1
-    assert task.stderr == None
+    assert task.stderr is None
     assert "Uhh.." in task.stdout
